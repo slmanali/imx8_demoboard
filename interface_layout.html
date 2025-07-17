@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Helmet UI Layout</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+    table { border-collapse: collapse; width: 100%; max-width: 1000px; margin: auto; }
+    td { border: 1px solid #ccc; padding: 10px; text-align: center; min-width: 80px; background: white; }
+    .header { background-color: #e0e0e0; font-weight: bold; }
+    .component { background-color: #f0f8ff; }
+    .button { background-color: #e6f7ff; }
+  </style>
+</head>
+<body>
+
+<h2 style="text-align:center;">Helmet UI Layout</h2>
+
+<table>
+  <tr>
+    <td class="header">Task Name</td>
+    <td class="header">QR Code</td>
+    <td class="header">Language</td>
+    <td class="header">List Modes / Files / Commands</td>
+    <td colspan="3" class="component">Audio Commands</td>
+    <td class="component">Headphone</td>
+    <td class="component">Slider</td>
+  </tr>
+  <tr>
+    <td rowspan="3" class="component">Task List</td>
+    <td rowspan="3"></td>
+    <td rowspan="3"></td>
+    <td>Standalone</td>
+    <td colspan="3"></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Call</td>
+    <td colspan="3"></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Setup</td>
+    <td colspan="3"></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td class="component">ADC/DMIC</td>
+    <td colspan="4" class="component">Capture Input</td>
+    <td colspan="3"></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td class="component">Message</td>
+    <td colspan="4"></td>
+    <td colspan="3"></td>
+    <td class="component">Digital Playback</td>
+    <td class="component">Slider</td>
+  </tr>
+  <tr>
+    <td class="component">User</td>
+    <td colspan="4"></td>
+    <td colspan="3"></td>
+    <td class="component">Battery</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td class="component">WiFi</td>
+    <td class="component">Battery</td>
+    <td class="component">Avatar</td>
+    <td class="component">Battery</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td colspan="2" class="component">Tabs</td>
+  </tr>
+  <tr>
+    <td colspan="4" class="component">1st Tab</td>
+    <td colspan="4" class="component">2nd Tab</td>
+    <td colspan="2" class="component">5th Tab</td>
+  </tr>
+  <tr>
+    <td colspan="9" class="component">Video Display</td>
+  </tr>
+  <tr>
+    <td colspan="9" class="component">PDF Display</td>
+  </tr>
+  <tr>
+    <td class="component">Battery</td>
+    <td colspan="4" class="component">Video Commands</td>
+    <td colspan="2" class="component">3rd Tab</td>
+    <td colspan="2" class="component">4th Tab</td>
+  </tr>
+</table>
+
+</body>
+</html>

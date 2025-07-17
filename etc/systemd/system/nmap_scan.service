@@ -1,0 +1,9 @@
+[Unit]
+Description=Run nmap scan after network is up
+After=network-online.target systemd-timesyncd
+[Service]
+Type=oneshot
+ExecStart=/root/startup_nmap_scan.sh
+RemainAfterExit=no
+[Install]
+WantedBy=multi-user.target
