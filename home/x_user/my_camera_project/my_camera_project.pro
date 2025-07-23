@@ -1,4 +1,4 @@
-QT += core gui widgets concurrent multimedia
+QT += core gui widgets concurrent
 
 CONFIG += c++17
 CONFIG += release
@@ -14,21 +14,21 @@ TARGET = my_camera_project
 SOURCES += main.cpp \
            camera_viewer.cpp 
 
-HEADERS += camera_viewer.h \
+HEADERS += camera_viewer.h\
             Configuration.h \
             Logger.h \
             gpio.h \
             Audio.h \
             HTTPSession.h \
-            power_management.h \
+            power_management.h \ 
             speechThread.h \
             camerareader.h \ 
             PDFCreator.h \
-            videocontroller.h \
+            videocontroller.h\
             LanguageManager.h \
             FloatingMessage.h \
             imu_classifier_thread.h
-
+            
 INCLUDEPATH += /usr/include/opencv4 \
                /usr/include/gstreamer-1.0 \
                /usr/lib/aarch64-linux-gnu/gstreamer-1.0 \

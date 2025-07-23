@@ -23,7 +23,8 @@
 
 class Camerareader {
 public:
-    Camerareader(const std::string& _camera_pipeline) :  camera_pipeline(_camera_pipeline) , frameCount(0), lastResetTime(QTime::currentTime()) {
+    Camerareader(const std::string& _camera_pipeline, int _debug=1) :  camera_pipeline(_camera_pipeline) , frameCount(0), debugg(_debug), 
+    lastResetTime(QTime::currentTime()), period(40) {
         LOG_INFO("Camerareader Constructor");
     }
 
@@ -60,7 +61,8 @@ public:
     }
 
     void startCapturing(int _period) {
-        timer.start(_period, 1, [this]() { CaptureFrame(); });
+        period =_period;
+        timer.start(period, 0, [this]() { CaptureFrame(); });
     }
 
     void stopCapturing() {
@@ -73,6 +75,8 @@ public:
 
     int startstream(std::string _stream_pipeline, int _fps, int _width, int _height) {
         try{
+            timer.stop();
+            timer.start(period, 1, [this]() { CaptureFrame(); });
             scap.open(_stream_pipeline, 0, _fps, cv::Size(_width, _height), true);
             if (!scap.isOpened()) {
                 LOG_ERROR("Error: Could not open the streaming pipline.");
@@ -91,6 +95,8 @@ public:
     
     void stopstream() {
         if (stream) {
+            timer.stop();
+            timer.start(period, 0, [this]() { CaptureFrame(); });
             stream = false;
             stopStreamingThread();
             cv::Mat* frame;
@@ -149,7 +155,7 @@ public:
                 if (error) g_error_free(error);
                 return false;
             }
-
+    
             gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
             // Wait for EOS or error (should finish after 1 buffer)
@@ -192,18 +198,20 @@ private:
     cv::Mat rframe;
     std::function<void(cv::Mat)> Frame_callback;
     int frameCount;
+    int debugg;
     QTime lastResetTime;    
     int swidth, sheight;
+    int period;
     bool stream = false;
     bool remote = false;
     // Streaming thread support
-    boost::lockfree::queue<cv::Mat*, boost::lockfree::capacity<30>> streamQueue;
+    boost::lockfree::queue<cv::Mat*, boost::lockfree::capacity<100>> streamQueue;
     std::thread streamThread;
     bool streamRunning = false;
 
     void CaptureFrame() {
         if (cap.isOpened()) {
-            // frameCount++;        
+
             // QTime currentTime = QTime::currentTime();
             // int elapsedMs = lastResetTime.msecsTo(currentTime);
             // if (elapsedMs >= 1000) {
@@ -242,6 +250,19 @@ private:
                 cvtColor(frame, frame, cv::COLOR_YUV2BGR_YUY2);
             }
 
+            if (debugg == 1) {
+                frameCount++;    
+                std::string text = std::to_string(frameCount);
+                cv::Point org(200, 200); // Bottom-left corner of the text
+                int fontFace = cv::FONT_HERSHEY_SIMPLEX;
+                double fontScale = 5;
+                cv::Scalar color(0, 255, 0); // BGR color (Blue, Green, Red) - here, Green
+                int thickness = 3;
+                int lineType = cv::LINE_AA; // For anti-aliased lines
+
+                // 3. Put Text on the Image
+                cv::putText(frame, text, org, fontFace, fontScale, color, thickness, lineType);
+            }
             // qint64 qtconversion = qtCheckpoint.elapsed();
             // auto chronoconversion = std::chrono::duration_cast<std::chrono::milliseconds>(
             // std::chrono::high_resolution_clock::now() - chronoCheckpoint).count();
@@ -312,7 +333,7 @@ private:
                         delete frameToStream; // Clean up after writing
                     }
                 } else {
-                    std::this_thread::sleep_for(std::chrono::microseconds(100)); // Brief wait
+                    std::this_thread::sleep_for(std::chrono::microseconds(10)); // Brief wait
                 }
             }
         });

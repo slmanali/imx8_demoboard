@@ -11,7 +11,6 @@
 #include <ctime>
 #include <chrono>
 #include <iomanip>
-
 class Logger {
 public:
     static void logInfoImpl(const std::string &message, const char* file, const char* function, int line) {
@@ -21,6 +20,7 @@ public:
     static void logErrorImpl(const std::string &message, const char* file, const char* function, int line) {
         log("ERROR", message, file, function, line);
     }
+
     static void logWarnImpl(const std::string &message, const char* file, const char* function, int line) {
         log("WARN", message, file, function, line);
     }

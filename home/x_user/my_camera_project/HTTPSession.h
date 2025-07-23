@@ -27,9 +27,14 @@ namespace fs = std::filesystem;
 class HTTPSession {
 public:
     
+    struct GPSData {
+            double lat;
+            double lng;
+    };
+    
     HTTPSession(const std::string& api_url, const std::string& ssl_cert_path, const std::string& api_key, std::string _helmet_status, Configuration& config)
         : api_url(api_url), ssl_cert_path(ssl_cert_path), api_key(api_key), helmet_status(_helmet_status),  config(config), Remote_IP(" "), 
-        operator_status("Work"), old_status(""), current_status("2")  {
+        operator_status("Work"), old_status(""), current_status("2"), _gpsdata({0.0, 0.0})  {
         LOG_INFO("HTTPSession Constructor");        
         curl_global_init(CURL_GLOBAL_DEFAULT);
     }
@@ -59,7 +64,7 @@ public:
                     return true;
                 }
                 else {
-                    if (i == 4) {
+                    if (i == 4){
                         set_system_time(new_time);
                         return false;
                     }
@@ -70,7 +75,7 @@ public:
             return false;
         } catch (const std::exception& e) {
             LOG_ERROR("Warning: Something went wrong while authenticating: " + std::string(e.what()));
-            return false;
+			return false;
         }
     }
 
@@ -123,7 +128,7 @@ public:
                     if (response_code == 200) {
                         LOG_INFO("[WIFI] HTTP traffic ok");
                         return true;
-                    }
+                    }                
             }
             return false;
         } catch (const std::exception& e) {
@@ -456,6 +461,10 @@ public:
         }
     }
 
+    GPSData getGPS() {
+        return _gpsdata;
+    }
+
 private:
     std::string api_url;
     std::string ssl_cert_path;
@@ -470,6 +479,7 @@ private:
     std::function<void(nlohmann::json, std::string)> update_status_callback;
     nlohmann::json data;
     std::mutex helmet_status_mutex;
+    GPSData _gpsdata;
 
     static size_t write_callback(void* contents, size_t size, size_t nmemb, void* userp) {
         ((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -545,7 +555,7 @@ private:
                 LOG_ERROR("CURL session is not initialized");
                 throw std::runtime_error("CURL session is not initialized");
             }
-
+    
             // Open file if output path is provided
             if (!output_file.empty()) {
                 file = fopen(output_file.c_str(), "wb");
@@ -574,13 +584,13 @@ private:
                 curl_easy_setopt(session, CURLOPT_TCP_KEEPALIVE, 1L);  // Enable TCP keep-alive
                 curl_easy_setopt(session, CURLOPT_TCP_KEEPIDLE, 30L);  // Idle time before sending keep-alive
                 curl_easy_setopt(session, CURLOPT_TCP_KEEPINTVL, 15L); // Interval between keep-alive probes
-
+    
                 struct curl_slist* headers = nullptr;
                 std::string header_str = "X-Api-Key: " + api_key + "\r\nHost: mydigitalhelmet.com";
                 headers = curl_slist_append(headers, header_str.c_str());
                 curl_easy_setopt(session, CURLOPT_HTTPHEADER, headers);
                 LOG_INFO("Sending GET request to: " + url);
-
+    
                 CURLcode res = curl_easy_perform(session);
                 if (res != CURLE_OK) {
                     LOG_ERROR("CURL failed with error: " + std::string(curl_easy_strerror(res)));
@@ -672,15 +682,15 @@ private:
         return std::random_device{}();
     }
 
-    std::string createRequestBody(const std::string mac, double lat, double lng, std::string status, double _temperature) {
+    std::string createRequestBody(const std::string mac, std::string status, double _temperature) {
         try {
             if (status !="") {
                 nlohmann::json req_body_json = {
                     {"reset", false},
                     {"mac", mac},
                     {"gps", {
-                        {"lat", lat},
-                        {"lng", lng}
+                        {"lat", _gpsdata.lat},
+                        {"lng", _gpsdata.lng}
                     }},
                     {"status", status},
                     {"temperature", _temperature}
@@ -693,8 +703,8 @@ private:
                     {"reset", false},
                     {"mac", mac},
                     {"gps", {
-                        {"lat", lat},
-                        {"lng", lng}
+                        {"lat", _gpsdata.lat},
+                        {"lng", _gpsdata.lng}
                     }},
                     {"status", "2"},
                     {"temperature", _temperature}
@@ -707,8 +717,8 @@ private:
                     {"reset", false},
                     {"mac", mac},
                     {"gps", {
-                        {"lat", lat},
-                        {"lng", lng}
+                        {"lat", _gpsdata.lat},
+                        {"lng", _gpsdata.lng}
                     }},
                     {"temperature", _temperature}
                 };
@@ -721,8 +731,9 @@ private:
         }        
     }
 
-    void readGPS(double& lat, double& lng){
+    void readGPS(){
         try {
+            double lat = 55.75222; double lng = 37.61556;
             std::ifstream file(config.gps_file.c_str());
             if (file.is_open()) {
                 std::string line;
@@ -734,6 +745,7 @@ private:
                         if (std::getline(stream, lat_str, ',') && std::getline(stream, lng_str, ',')) {
                             lat = std::stod(lat_str);
                             lng = std::stod(lng_str);
+                            _gpsdata = {lat, lng};
                         }
                     }
                 }            
@@ -810,10 +822,8 @@ private:
 
     void update_status() {
         try {
-            double lat = 0.0;
-            double lng = 0.0;
             std::string _status = "";
-            readGPS(lat, lng);
+            readGPS();
             current_status = readIMUStatus();
             if (current_status != old_status && config.testbench == 0) {
                 old_status = current_status;
@@ -822,8 +832,7 @@ private:
             double temperature = readTemperature();
 
             std::string url = api_url + "/api/helmets/status?" + std::to_string(random_bits());
-            // std::string req_body = createRequestBody(get_mac("wlan0"), lat, lng, "", temperature);
-            std::string req_body = createRequestBody(get_mac("wlan0"), lat, lng, _status, temperature);
+            std::string req_body = createRequestBody(get_mac("wlan0"), _status, temperature);
             std::string response;  
             long response_code;
 
@@ -853,7 +862,7 @@ private:
                                 else if (Remote_IP != data["call_details"]["ipv4"]) {
                                     Remote_IP = data["call_details"]["ipv4"];
                                     LOG_INFO("Desktop Client IP: " + Remote_IP);
-                                }                                                       
+                                }                         
                             }
                             if (update_status_callback) {                                                               
                                 helmet_status = operator_status + "_active";  
@@ -868,12 +877,12 @@ private:
                                 update_status_callback(data, "standby");
                             }                    
                         }                                            
-                    }
-                }
-                else {
+                    } 
+                }                     
+                else{
                     LOG_INFO(data["helmet_status"]);
                     // update_helmet_status(data["helmet_status"]);
-                }                      
+                }
             }
         } catch (const std::exception& e) {
             LOG_ERROR("Something went wrong update_status: " + std::string(e.what()));            
@@ -927,12 +936,9 @@ private:
 
     void send_ping() {
         try {
-            double lat = 0.0;
-            double lng = 0.0;
-            readGPS(lat, lng);
             double temperature = readTemperature();
             std::string url = api_url + "/api/helmet-ping?" + std::to_string(random_bits());
-            std::string req_body = createRequestBody(get_mac("wlan0"), lat, lng, "", temperature);
+            std::string req_body = createRequestBody(get_mac("wlan0"), "", temperature);
             std::string response;  
             long response_code;
 

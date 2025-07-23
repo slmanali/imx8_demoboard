@@ -25,10 +25,10 @@ wget -O${file} http://wepodownload.mediatek.com/EPO_GPS_3_7.DAT -t 1 -T 10 || cp
 # wget -O${file} http://wepodownload.mediatek.com/EPO_GR_3_1.DAT -t 1 -T 10 || cp $file.last $file
 
 echo "Parsing and Extracting Information From EPO"
-home/x_user/my_camera_project/epo_parser home/x_user/my_camera_project/MTK14.EPO 
+/home/x_user/my_camera_project/epo_parser /home/x_user/my_camera_project/MTK14.EPO 
 
 echo "Reseting The GPS"
-home/x_user/my_camera_project/gps_config
+/home/x_user/my_camera_project/gps_config
 
 echo "Injection Time In The GPS"
 # Get current time
@@ -44,9 +44,9 @@ NMEA="\$$CMD*$CKSUM\r\n"
 # Send to GPS serial
 echo -ne "$NMEA" > /dev/ttymxc1
 
-sudo home/x_user/my_camera_project/epo_upload_demo
+sudo /home/x_user/my_camera_project/epo_upload_demo
 
 echo "Read GPS Data"
-home/x_user/my_camera_project/gps_parser
+/home/x_user/my_camera_project/gps_parser
 
 # sudo minicom -D /dev/ttymxc1 -b 115200

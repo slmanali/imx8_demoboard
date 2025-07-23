@@ -47,7 +47,7 @@ public:
         : wireless_interface(wireless_interface), current_network(""), current_hostname(""), force_connection(false), 
           _connected(false), _http_ok(false), _vpn_ok(false), vpn_process(-1), config(_config), session(_session) {
             LOG_INFO("WiFiManager Constructor");
-        }
+          }
 
     void init() {
         connections.clear();
@@ -339,14 +339,12 @@ public:
             // // Start OpenVPN process
             // std::string command = "sudo /usr/sbin/openvpn --config " + file_path + "&";
 
-            std::string script_path = "/home/x_user/my_camera_project/vpn_start_script.sh"; // Adjust this path as needed
-
             // Ensure the script is executable
-            std::string chmod_cmd = "chmod +x " + script_path;
+            std::string chmod_cmd = "chmod +x " + config.script_vpn;
             system(chmod_cmd.c_str());
 
             // Construct the command to run the script with sudo and the config file as an argument
-            std::string command = "sudo " + script_path + " " + file_path + " &";
+            std::string command = "sudo " + config.script_vpn + " " + file_path + " &";
             vpn_output = std::make_shared<std::FILE*>(popen(command.c_str(), "r"));
             if (!vpn_output) {
                 LOG_ERROR("Failed to start VPN process.");
@@ -448,7 +446,7 @@ public:
         } catch (const std::exception& e) {
             LOG_ERROR("[WIFI] Error while enabling wifi: " + std::string(e.what()));
         }
-    }    
+    }
 
     int check_wifi(const int _max_attempts = 30) {
         try {
@@ -462,13 +460,13 @@ public:
                     return 0;
                 }                    
                 else if (Wconnected == 1)  {         
-                    LOG_INFO("WIFI NOT Connected.");
-                    return 1;
-                }
-                else if (Wconnected == 2)  {         
-                    LOG_INFO("WIFI UNAVAILABLE.");
-                    return 2;
-                }
+                LOG_INFO("WIFI NOT Connected.");
+                return 1;
+            }
+            else if (Wconnected == 2)  {         
+                LOG_INFO("WIFI UNAVAILABLE.");
+                return 2;
+            }
                 else if (Wconnected == 3)  {         
                     LOG_INFO("WIFI connecting (configuring).");
                     attempts -= 1;
@@ -516,19 +514,19 @@ private:
                 if (state == "connected") {
                     return 0;
                 }
-                else if (state == "disconnected") {
+                else if (state == "disconnected"){
                     return 1;
                 }
-                else if (state == "unavailable") {
+                else if (state == "unavailable"){
                     return 2;
-                }
+                }                
                 else if (state == "connecting"){
                     return 3;
                 }
                 else if (state == "configuring"){
                     return 3;
-                }
             }
+        }
         }
         return 2;
     }

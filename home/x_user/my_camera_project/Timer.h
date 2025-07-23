@@ -25,7 +25,7 @@ public:
                         std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms/4));
                     }
                     else if (_type == 1){
-                        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms/2));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms/5));
                     }
                     if (running) {
                         callback();

@@ -9,11 +9,11 @@
 class Videocontroller {
 public:
     Videocontroller(const std::string& _video_path): video_path(_video_path), isStop(true), isPause(true), volume(35), pipeline(nullptr), volumeElement(nullptr) {
-        LOG_INFO("Camerareader Constructor");
+        LOG_INFO("Videocontroller Constructor");
     }
 
     ~Videocontroller(){
-        LOG_INFO("Camerareader Destructor");
+        LOG_INFO("Videocontroller Destructor");
         stopPlaying();
         releasecamera();
     }
@@ -33,6 +33,19 @@ public:
                 return -1;
             }
 
+            // Set frame rate for timer
+            double fps = cap.get(cv::CAP_PROP_FPS);
+            if (fps <= 0) {
+                fps = 25; // Default if FPS retrieval fails
+            }
+            int interval = static_cast<int>(1000 / fps);
+            timer.start(interval, 2, [this]() { PlayFrame(); });
+
+            // Start audio playback
+            gst_element_set_state(pipeline, GST_STATE_PLAYING);
+            isStop = false;
+            isPause = false;
+            
             // Set up GStreamer pipeline for audio only
             std::string audioPipelineDesc =
                 "filesrc location=\"" + video_path + "\" ! decodebin name=d "
@@ -47,18 +60,7 @@ public:
 
             volumeElement = gst_bin_get_by_name(GST_BIN(pipeline), "vol");
 
-            // Set frame rate for timer
-            double fps = cap.get(cv::CAP_PROP_FPS);
-            if (fps <= 0) {
-                fps = 25; // Default if FPS retrieval fails
-            }
-            int interval = static_cast<int>(1000 / fps);
-            timer.start(interval, 1, [this]() { PlayFrame(); });
-
-            // Start audio playback
-            gst_element_set_state(pipeline, GST_STATE_PLAYING);
-            isStop = false;
-            isPause = false;
+            
             return 0;
         } catch (const std::exception& e) {
             LOG_ERROR("Videocontroller init error: " + std::string(e.what()));

@@ -6,8 +6,8 @@
             "call":"3-CALL",
             "setup":"4-SETUP",                    
             "next": "1-NEXT",
-            "previous": "2-BACK",
-            "close": "3-CLOSE",
+            "previous": "2-BACK", 
+            "close": "3-CLOSE", 
             "wifi":"1-Turn on WIFI",
             "exit":"1-EXIT",
             "camera":"3-CAMERA",
@@ -29,7 +29,7 @@
         "Navigationtab":[
             "1 - DOCUMENT", 
             "2 - TASK", 
-            "3 - VIDEO",
+            "3 - VIDEO", 
             "4 - LANGS",
             "5 - AUDIO",
             "6 - EXIT"
@@ -102,7 +102,8 @@
             "NOVIDEO": "THE VIDEO WON'T OPEN",
             "NOCAMERA": "THE CAMERA WON'T OPEN",
             "NOFRAME": "THE FRAME IS EMPTY",
-            "NOTCONNECT": "NO WIFI IS CONNECTED"
+            "NOTCONNECT": "NO WIFI IS CONNECTED",
+            "NOFILES": "NO TASKS, DOCUMENTS OR VIDEOS ARE ASSIGNED"
         },               
         "pdf_message":{
             "name":"Report",
@@ -112,7 +113,9 @@
             "mp4": "Load MP4 file ",
             "txt": "Load TXT file ",
             "taskN": "Task N. ",
-            "pageN": "Page N. "
+            "pageN": "Page N. ",
+            "operator": "Operator status ",
+            "gps": "Location "
         }
     },
     "lang_rus":{
@@ -124,7 +127,7 @@
             "next": "1-ДАЛЬШЕ",
             "previous": "2-НАЗАД",
             "close": "3-ЗАВЕРШИТЬ",
-            "wifi":"1-ВКЛЮЧИ WIFI",
+            "wifi":"1-ВКЛЮЧИWIFI",
             "exit":"1-ВЫХОД",
             "camera":"3-КАМЕРА",
             "call_status":"ВЫЗОВ",  
@@ -218,7 +221,8 @@
             "NOVIDEO": "ВИДЕО НЕ ОТКРЫВАЕТСЯ",
             "NOCAMERA": "КАМЕРА НЕ ОТКРЫВАЕТСЯ",
             "NOFRAME": "РАМКА ПУСТА",
-            "NOTCONNECT": "WI-FI НЕ ПОДКЛЮЧЕН"
+            "NOTCONNECT": "WI-FI НЕ ПОДКЛЮЧЕН",
+            "NOFILES": "НИКАКИЕ ЗАДАЧИ, ДОКУМЕНТЫ ИЛИ ВИДЕОЗАПИСИ НЕ НАЗНАЧАЮТСЯ"
         },               
         "pdf_message":{            
             "name": "Отчёт_",
@@ -228,7 +232,9 @@
             "mp4": "Загрузить MP4-файл ",
             "txt": "Загрузить TXT-файл ",
             "taskN": "Задача N. ",
-            "pageN": "Страница N. "
+            "pageN": "Страница N. ",
+            "operator": "Статус оператора ",
+            "gps": "Позиция "
         }
     },
     "lang_ara":{
@@ -304,7 +310,7 @@
             "silent":"أضعف",
             "close": "خروج",
             "quit": "إغلاق"            
-        },        
+        },               
         "languagestab":{
             "russian":"روسي",
             "english": "إنكليزي",
@@ -317,7 +323,7 @@
             "Capturesilent":"ميكروفون أضعف",
             "AudioReset":"ضبط الصوت",
             "quit": "إغلاق"  
-        }, 
+    },
         "audiotab":{
             "headphonename":"مستوى السماعات",
             "Capturename":"مستوى الميكروفون",
@@ -333,7 +339,8 @@
             "NOVIDEO": "الفيديو لم يفتح",
             "NOCAMERA": "الكاميرا لن تفتح",
             "NOFRAME": "الإطار فارغ",
-            "NOTCONNECT": "لا يوجد اتصال واي فاي"
+            "NOTCONNECT": "لا يوجد اتصال واي فاي",
+            "NOFILES": "لم يتم تعيين أي مهام أو مستندات أو مقاطع فيديو"
         },               
         "pdf_message":{            
             "name":" تقرير ",
@@ -343,7 +350,9 @@
             "mp4": " تحميل الفيديو ",
             "txt": " تحميل المهام ",
             "taskN": " رقم المهمة ",
-            "pageN": " رقم الصفحة "
+            "pageN": " رقم الصفحة ",
+            "operator": " حالة العامل ",
+            "gps": " الموقع "
         }
     },
     "languagesList": [

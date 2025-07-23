@@ -77,8 +77,8 @@ CameraViewer::CameraViewer(QWidget *parent)
     session(" ", config.ssl_cert_path, config.api_key, "offline", config),
     network(config.wireless_interface, config, session),
     pm(config),
-    voiceThread(std::make_unique<speechThread>(lang.getVosk(), lang.getGrammar(), config.pipeline_description, 5)),
-    cameraThread(std::make_unique<Camerareader>( config._vl_loopback)),
+    voiceThread(std::make_unique<speechThread>(lang.getVosk(), lang.getGrammar(), config.pipeline_description, 10)),
+    cameraThread(std::make_unique<Camerareader>( config._vl_loopback, config.debug)),
     videoThread(std::make_unique<Videocontroller>("")),
     imuThread(std::make_unique<IMUClassifierThread>(config.imu)),
     A_player(config.audio_incoming_pipeline),
@@ -208,12 +208,18 @@ CameraViewer::CameraViewer(QWidget *parent)
                 imuThread->start_IMU(config.status_update);
             }
 
-            pm.set_battery_status_callback([this](PowerManagement::BatteryStatus status) {
-                QMetaObject::invokeMethod(this, [this, status]() {
-                    this->batteryiconchange(status);
-                }, Qt::QueuedConnection);
-            });
-            pm.start_updates();
+        pm.set_battery_status_callback([this](PowerManagement::BatteryStatus status) {
+            QMetaObject::invokeMethod(this, [this, status]() {
+                this->batteryiconchange(status);
+            }, Qt::QueuedConnection);
+        });
+        pm.start_updates();
+
+            std::string chmod_cmd = "chmod +x " + config.script_gps;
+            system(chmod_cmd.c_str());
+
+            std::string command = "sudo " + config.script_gps;
+            system(command.c_str());
         }
         AudioReset();
     } catch (const std::exception& e) {
@@ -361,7 +367,7 @@ QWidget* CameraViewer::createFirstTab() {
         legend_label3->setStyleSheet("QLabel { color : green; font-weight: bold;}");        
         status_label->setFont([](int size) { QFont font; font.setPointSize(size); return font; }(config.font_size));
         status_label->setText(QString::fromStdString(lang.getText("defaulttab","setup")));
-        status_label->setStyleSheet("QLabel { color : green; font-weight: bold;}");               
+        status_label->setStyleSheet("QLabel { color : green; font-weight: bold;}");
         user_label->setFont([](int size) { QFont font; font.setPointSize(size); return font; }(config.font_size));
         user_label->setStyleSheet("QLabel { color : green; font-weight: bold;}");
         user_label->setVisible(false);
@@ -423,7 +429,7 @@ QWidget* CameraViewer::createNavigationWidget() {
             navItems << "Error: Invalid Navigationtab format";
         }
         // Add the items to the QListWidget
-        listFiles->addItems(navItems);              
+        listFiles->addItems(navItems);        
         layout->addWidget(listFiles);        
         QPixmap pixmap_battery(QString::fromStdString(config.battery_file_full));
         QPixmap scaledPixmapBattery = pixmap_battery.scaled(
@@ -923,7 +929,6 @@ void CameraViewer::FSM(nlohmann::json _data, std::string _event) {
             }
             else if (_event == "standby") {
                 AudioReset();
-                voiceThread->start();
                 // session.update_helmet_status(session.get_operator_status() + "_standby");
                 session.terminate_support();
                 streamend();
@@ -952,6 +957,7 @@ void CameraViewer::FSM(nlohmann::json _data, std::string _event) {
                 message->setVisible(false);
                 message->clear();
                 user_label->setVisible(false);
+                voiceThread->start();
             }
         }
         else if (current_mode.find("qrcode") != std::string::npos) {
@@ -1049,7 +1055,7 @@ void CameraViewer::handle_update_frame(cv::Mat _frame) {
         double capture_time = std::chrono::duration<double, std::milli>(
             capture_end - frame_start).count();
         // std::cout << "capture time: " << capture_time << std::endl;
-        LOG_INFO("capture_time " + std::to_string(capture_time));
+        // LOG_INFO("capture_time " + std::to_string(capture_time));
         // if (!screenshot) {
         //     screenshot = true;
         //     QPixmap pixmap1 = this->grab();
@@ -1768,6 +1774,51 @@ void CameraViewer::report_and_reset_clicks() {
                     }
                 }
             }
+            else if(current_mode.find("emptyStandalone") != std::string::npos) {                
+                if (config.debug == 0) {
+                    network.enable_wifi();
+                    int Wconnected = 2;
+                    while(Wconnected != 0){
+                        Wconnected = network.check_wifi();
+                    }
+                    network.init();
+                    network.setConnections(wifi);
+                    _working_wifi = network.run();
+                    working_mode();
+                }
+                else {
+                    int _cap = cameraThread->init();
+                    if (_cap == -1) { 
+                        image = QImage(Swidth, Sheight, QImage::Format_RGB888);
+                        image.fill(Qt::black);  // Fill the image with black
+                        QPainter painter(&image);
+                        painter.setRenderHint(QPainter::Antialiasing);
+                        painter.setPen(QColor(Qt::green));
+                        QFont font("Arial", 30);
+                        painter.setFont(font);
+                        painter.drawText(Swidth/2 -100, Sheight/2, QString::fromStdString(lang.getText("error_message", "NOCAMERA")));
+                        painter.end();
+                        pixmap = QPixmap::fromImage(image);
+                        videoPixmapItem->setPixmap(pixmap);
+                        videoScene->setSceneRect(videoPixmapItem->boundingRect());
+                        videoView->fitInView(videoScene->sceneRect(), Qt::KeepAspectRatioByExpanding); 
+                        videoView->centerOn(videoPixmapItem);
+                        videoView->viewport()->update();  
+                        legend_label3->setText(QString::fromStdString(lang.getText("defaulttab","camera")));
+                        status_label->setVisible(false);           
+                        session.stop_notify();  
+                        session.update_helmet_status("nocamera");
+                        current_mode = "nocamera";
+                        return;
+                    }    
+                    camera_rotate = false;
+                    cameraThread->startCapturing(config.period);
+                    session.update_helmet_status(session.get_operator_status() + "_standby");
+                    current_mode = session.get_helmet_status();
+                    session.generate_notify();   
+                    stackedWidget->setCurrentIndex(0);    
+                }
+            }
             clicks = 0;
             btn_click = false;
         }
@@ -1808,6 +1859,12 @@ void CameraViewer::handleIMUClassification(const QString& label) {
             session.set_operator_status("Work");
         }
         operator_status_list.clear();
+        if (current_mode.find("Standalone") != std::string::npos) {
+            pdf.addText(lang.getText("pdf_message","operator") + session.get_operator_status());
+            HTTPSession::GPSData _gps = session.getGPS();
+            pdf.addText(lang.getText("pdf_message","gps") + std::to_string(_gps.lat) + "," + std::to_string(_gps.lng));            
+            pdf.addText("------------------------------------------------");
+        }
     }
 }
 
@@ -1832,14 +1889,24 @@ void CameraViewer::complete_standalone_transition(bool _NOWIFI) {
                         floatingMessage->timer_stop();
                         floatingMessage->showMessage(QString::fromStdString(lang.getText("standalonetab","download")), 1);
                         A_control.setCaptureInputType("ADC");
-                        A_control.setCaptureInputVolume(28);
-                        A_control.setDigitalPlaybackVolume(85);
-                        A_control.setLineOutputVolume(35);
+                        A_control.setCaptureInputVolume(25);
+                        A_control.setDigitalPlaybackVolume(90);
+                        A_control.setLineOutputVolume(60);
                         A_control.setDigitalCaptureVolume(70);
                         standalone_language_transition = false;
                         LOG_INFO("current mode " + current_mode);
                     }, Qt::QueuedConnection);
                 });
+            }
+            else {
+                floatingMessage->showMessage(QString::fromStdString(lang.getText("error_message","NOFILES")), 2);
+                A_control.setCaptureInputType("ADC");
+                A_control.setCaptureInputVolume(25);
+                A_control.setDigitalPlaybackVolume(90);
+                A_control.setLineOutputVolume(60);
+                A_control.setDigitalCaptureVolume(70);
+                standalone_language_transition = false;
+                showdefaultstandalone(false);
             }
             if (config.debug == 0)
                 network.disable_wifi();            
@@ -2303,6 +2370,53 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                     }
                 }
             }
+            else if(current_mode.find("emptyStandalone") != std::string::npos) {   
+                if (_command == lang.getText("standalonetab","close")) {             
+                    if (config.debug == 0) {
+                        network.enable_wifi();
+                        int Wconnected = 2;
+                        while(Wconnected != 0){
+                            Wconnected = network.check_wifi();
+                        }
+                        network.init();
+                        network.setConnections(wifi);
+                        _working_wifi = network.run();
+                        working_mode();
+                    }
+                    else {
+                        int _cap = cameraThread->init();
+                        if (_cap == -1) { 
+                            image = QImage(Swidth, Sheight, QImage::Format_RGB888);
+                            image.fill(Qt::black);  // Fill the image with black
+                            QPainter painter(&image);
+                            painter.setRenderHint(QPainter::Antialiasing);
+                            painter.setPen(QColor(Qt::green));
+                            QFont font("Arial", 30);
+                            painter.setFont(font);
+                            painter.drawText(Swidth/2 -100, Sheight/2, QString::fromStdString(lang.getText("error_message", "NOCAMERA")));
+                            painter.end();
+                            pixmap = QPixmap::fromImage(image);
+                            videoPixmapItem->setPixmap(pixmap);
+                            videoScene->setSceneRect(videoPixmapItem->boundingRect());
+                            videoView->fitInView(videoScene->sceneRect(), Qt::KeepAspectRatioByExpanding); 
+                            videoView->centerOn(videoPixmapItem);
+                            videoView->viewport()->update();  
+                            legend_label3->setText(QString::fromStdString(lang.getText("defaulttab","camera")));
+                            status_label->setVisible(false);           
+                            session.stop_notify();  
+                            session.update_helmet_status("nocamera");
+                            current_mode = "nocamera";
+                            return;
+                        }    
+                        camera_rotate = false;
+                        cameraThread->startCapturing(config.period);
+                        session.update_helmet_status(session.get_operator_status() + "_standby");
+                        current_mode = session.get_helmet_status();
+                        session.generate_notify();   
+                        stackedWidget->setCurrentIndex(0);    
+                    }
+                }
+            }            
             else {
                 if (_command == lang.getText("defaulttab","langs_command")) {
                     if (current_mode.find("request") == std::string::npos || current_mode.find("qrcode") == std::string::npos) {
@@ -2440,8 +2554,8 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         user_label->setVisible(false);
                         user_label->clear();
                     }
-
                 }
+
                 else if (_command == lang.getText("defaulttab","exit_command")) {
                     if (current_mode.find("qrcode") != std::string::npos) {
                         //Qrcode
@@ -2554,11 +2668,11 @@ void CameraViewer::handle_command_recognize(std::string _command) {
 
 void CameraViewer::AudioReset() {
     try {
-        A_control.setVolumeLevel(35);
-        // A_control.setLineOutputVolume(35);
-        A_control.setCaptureInputVolume(25);
-        A_control.setDigitalPlaybackVolume(85);
-        A_control.setDigitalCaptureVolume(70);
+        A_control.setVolumeLevel(55);
+        A_control.setLineOutputVolume(60);
+        A_control.setCaptureInputVolume(30);
+        A_control.setDigitalPlaybackVolume(95);
+        A_control.setDigitalCaptureVolume(115);
         // A_control.setDigitalPlaybackBoostVolume(0);
         // A_control.setDigitalSidetoneVolume(0);
         A_control.setCaptureInputType("ADC");
@@ -2976,42 +3090,49 @@ void CameraViewer::streamend() {
     }    
 }
 
-void CameraViewer::showdefaultstandalone() {
+void CameraViewer::showdefaultstandalone(bool _standalone) {
     try {        
-        pdf.addText(lang.getText("pdf_message","first_page") + getCurrentDateTime());
-        stackedWidget->setCurrentIndex(1);
-        listFiles->clear();
-        taskListWidget->clear();
-        std::string navJsonStr = lang.getSection("Navigationtab");        
-        // Parse the JSON string
-        nlohmann::json navJson = nlohmann::json::parse(navJsonStr);        
-        // Create a QStringList to hold the items
-        QStringList navItems;        
-        // Check if the section is an array
-        if (navJson.is_array()) {
-            for (const auto& item : navJson) {
-                navItems << QString::fromStdString(item.get<std::string>());
+        if(_standalone){
+            pdf.addText(lang.getText("pdf_message","first_page") + getCurrentDateTime());
+            stackedWidget->setCurrentIndex(1);
+            listFiles->clear();
+            taskListWidget->clear();
+            std::string navJsonStr = lang.getSection("Navigationtab");        
+            // Parse the JSON string
+            nlohmann::json navJson = nlohmann::json::parse(navJsonStr);        
+            // Create a QStringList to hold the items
+            QStringList navItems;        
+            // Check if the section is an array
+            if (navJson.is_array()) {
+                for (const auto& item : navJson) {
+                    navItems << QString::fromStdString(item.get<std::string>());
+                }
             }
-        }
-        // Check if the section is an object (extract values)
-        else if (navJson.is_object()) {
-            for (auto it = navJson.begin(); it != navJson.end(); ++it) {
-                navItems << QString::fromStdString(it.value().get<std::string>());
+            // Check if the section is an object (extract values)
+            else if (navJson.is_object()) {
+                for (auto it = navJson.begin(); it != navJson.end(); ++it) {
+                    navItems << QString::fromStdString(it.value().get<std::string>());
+                }
+            } else {
+                LOG_ERROR("Navigationtab section is neither an array nor an object");
+                navItems << "Error: Invalid Navigationtab format";
             }
-        } else {
-            LOG_ERROR("Navigationtab section is neither an array nor an object");
-            navItems << "Error: Invalid Navigationtab format";
-        }
-        // Add the items to the QListWidget
-        listFiles->addItems(navItems);         
-        QPixmap pixmap1 = this->grab();
-        pixmap1.scaled(640, 480, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-        pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");
-        pdf.addImage("/home/x_user/my_camera_project/screenshot.png");
-        pdf.addText("------------------------------------------------");
-        if (cameraThread->takeSnapshotGst(config.snapshot_pipeline)) {
-            pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
+            // Add the items to the QListWidget
+            listFiles->addItems(navItems);         
+            QPixmap pixmap1 = this->grab();
+            pixmap1.scaled(640, 480, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+            pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");
+            pdf.addImage("/home/x_user/my_camera_project/screenshot.png");
             pdf.addText("------------------------------------------------");
+            if (cameraThread->takeSnapshotGst(config.snapshot_pipeline)) {
+                pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
+                pdf.addText("------------------------------------------------");
+            }
+        }
+        else {
+            listFiles->addItem(QString::fromStdString(lang.getText("error_message","NOFILES")));
+            listFiles->addItem(QString::fromStdString(lang.getText("standalonetab","close")));
+            current_mode = "emptyStandalone";            
         }
     } catch (const std::exception& e) {
         LOG_ERROR("An error occurred in CameraViewer showdefaultstandalone: " + std::string(e.what()));
@@ -3769,42 +3890,50 @@ void CameraViewer::processQRCode(cv::Mat _frame){
 void CameraViewer::batteryiconchange(PowerManagement::BatteryStatus status) {
     try {
         QString battery_name;
-        floatingMessage->timer_stop();
         switch (status) {
             case PowerManagement::BatteryStatus::GREEN:
                 if (battery_status != status) {
                     battery_status = status;
                     battery_name = QString::fromStdString(config.battery_file_full);
+                    floatingMessage->timer_stop();
                 }
+                // LOG_INFO("GREEN");
                 break;
             case PowerManagement::BatteryStatus::YELLOW:
                 if (battery_status != status) {
                     battery_status = status;
                     battery_name = QString::fromStdString(config.battery_file_mid);
+                    floatingMessage->timer_stop();
                 }
+                // LOG_INFO("YELLOW");
                 break;
             case PowerManagement::BatteryStatus::RED:
                 if (battery_status != status) {
                     battery_status = status;
-                    battery_name = QString::fromStdString(config.battery_file_low); 
-                    floatingMessage->showMessage(QString::fromStdString(config.battery_file_empty) , 3);
+                    battery_name = QString::fromStdString(config.battery_file_low);
+                    floatingMessage->timer_stop();
                 }
+                // LOG_INFO("RED");          
                 break;
             case PowerManagement::BatteryStatus::CRITICAL:
                 if (battery_status != status) {
                     battery_status = status;
                     battery_name = QString::fromStdString(config.battery_file_empty);
-                    floatingMessage->showMessage(QString::fromStdString(config.battery_file_empty) , 3);
                 }
+                // LOG_INFO("CRITICAL");    
+                floatingMessage->showMessage(QString::fromStdString(config.battery_file_empty) , 3);
                 break;
         }  
         if (!battery_name.isEmpty()) {
             // Use a mutex to ensure thread-safe access to the QPixmap
+            // std::cout << "battery_name: " << battery_name.toStdString() << std::endl;
+            
             std::unique_lock<std::mutex> lock(battery_mutex); // Use unique_lock
 
             // Load the pixmap
             QPixmap pixmap_battery(battery_name);
-            int battery_wifi_Width = Swidth/10;
+            battery_name.clear();
+            int battery_wifi_Width = Swidth/30;
             int default_height = Sheight/10;
             if (current_mode.find("Standalone") != std::string::npos) {
                 battery_wifi_Width = Swidth/30;

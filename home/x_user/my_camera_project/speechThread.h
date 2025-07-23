@@ -59,9 +59,6 @@ public:
         if (timeout_thread.joinable()) {
             timeout_thread.join();
         }
-        
-        // Now safely clean up Vosk resources
-        cleanup();
     }
 
     bool getstatus() {
@@ -83,6 +80,7 @@ private:
     VoskModel *model = nullptr;
     VoskRecognizer *rec = nullptr;
     std::function<void(const std::string&)> command_callback;
+    std::atomic<bool> paused_;
     std::mutex cleanup_mutex;
 
     void initialize_vosk() {

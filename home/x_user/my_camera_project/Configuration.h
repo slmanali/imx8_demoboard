@@ -75,14 +75,17 @@ class Configuration {
         int bitrate;
         int speriod;
         std::string camera_device;    
-        int maintab;  
-        int rotate;    
+        int maintab;   
+        int rotate;   
         int font_size;    
         std::string todo;
         // std::string vosk_model;
         std::string default_language;
         int debug;
+        int level;
         int testbench;
+        std::string script_gps;
+        std::string script_vpn;
         int width;
         int height;
         int swidth;
@@ -199,7 +202,10 @@ class Configuration {
                 // vosk_model = config["vosk_model"].asString();
                 default_language = config["default_language"].asString();
                 debug = config["debug"].asInt();
+                level = config["level"].asInt();
                 testbench = config["testbench"].asInt();
+                script_gps = config["script_gps"].asString();
+                script_vpn = config["script_vpn"].asString();
                 width = config["width"].asInt();
                 height = config["height"].asInt();
                 swidth = config["swidth"].asInt();
@@ -243,6 +249,7 @@ class Configuration {
                 microphone_pipeline_str = config["pipelines"]["microphone_pipeline"].asString();
                 phone_pipeline_str = config["pipelines"]["headphones_pipeline"].asString();
                 pipeline_description = config["pipelines"]["pipeline_description"].asString();
+                pipeline_description = replacePlaceholder(pipeline_description, "$level", std::to_string(level));
                 // std::ostringstream oss;
                 // oss << "[";
                 // const Json::Value& grammar = config["grammar"];

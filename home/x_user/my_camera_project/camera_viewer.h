@@ -104,7 +104,7 @@ public:
     void remoteend();
     void streamstart(std::string _stream);
     void streamend();
-    void showdefaultstandalone();
+    void showdefaultstandalone(bool _standalone = true);
     void showpdfmode();
     void showvideomode();
     void showtxtmode();
@@ -133,7 +133,7 @@ public:
     void stop_qrcode();
     std::string base64_decode_openssl(const std::string &encoded);
     std::string aes_decrypt_ecb(const std::string &cipherText, const std::string &key);
-    std::string removePadding(const std::string &input, const std::string &padding);    
+    std::string removePadding(const std::string &input, const std::string &padding);
     void processQRCode(cv::Mat _frame);
     void batteryiconchange(PowerManagement::BatteryStatus _status);
     void complete_standalone_transition(bool _NOWIFI);

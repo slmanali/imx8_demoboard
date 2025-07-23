@@ -365,3 +365,4 @@ int main() {
     return 0;
 }
 //g++ -std=c++17 -pthread gps_parser.cpp -o gps_parser -lboost_system -lboost_thread
+//./gps_parser

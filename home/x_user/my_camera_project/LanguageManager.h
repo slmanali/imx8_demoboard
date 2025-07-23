@@ -21,11 +21,23 @@ public:
             LOG_ERROR("Could not open language file: " + jsonFilePath);
             throw std::runtime_error("Could not open language file: " + jsonFilePath);
         }
-        std::string json_str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        langs = json::parse(json_str);
-        language_keys = {{"English", "lang_eng"}, {"Русский", "lang_rus"}};
-        setLanguage(default_language); // Default
+        
+        try {
+            langs = json::parse(file);
+            
+            // Parse language mappings
+            for (const auto& lang_obj : langs["languagesList"]) {
+                for (auto& [display_name, lang_code] : lang_obj.items()) {
+                    language_keys[display_name] = lang_code;
+                }
+            }
+            
+            setLanguage(default_language);
         LOG_INFO("LanguageManager Constructor");
+        } catch (const json::exception& e) {
+            LOG_ERROR("JSON parsing error: " + std::string(e.what()));
+            throw std::runtime_error("JSON parsing error");
+        }
     }
 
     void setLanguage(const std::string& lang) {
@@ -34,15 +46,8 @@ public:
             throw std::invalid_argument("Language not supported: " + lang);
         }
         translations = langs[language_keys[lang]];
+        default_language = lang;
         LOG_INFO("Language set to: " + lang);
-    }
-
-    void changeLanguage() {
-        if (default_language == "English")
-            default_language = "Русский";            
-        else                     
-            default_language = "English";
-        setLanguage(default_language);
     }
 
     std::string getDefaultLanguage() const {
