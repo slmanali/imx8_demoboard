@@ -174,8 +174,8 @@
 # # from scipy.stats.stats import pearsonr
 # # import joblib
 
-# # # IMU_LOG_FILE_PATH = '/home/x_user/client/IMU_logs/IMU_log'
-# # Model_File = '/home/x_user/my_camera_project/Class_Freq_R.pkl'
+# # # IMU_LOG_FILE_PATH = '/home/x_user/test/IMU_log'
+# # Model_File = '/home/x_user/test/Class_Freq_R.pkl'
 # # rf = joblib.load(Model_File)
 
 # # # IMU LIS2DW12TR registers
@@ -254,9 +254,8 @@
 # #     # argv = sys.argv[1]
 # #     Time_run = datetime.datetime.now()
 # #     # IMU_LOG_FILE_PATH=IMU_LOG_FILE_PATH+Time_run.strftime('%Y_%m_%d_%H_%M_%S')+".csv"
-# #     IMU_LOG_FILE = "/home/x_user/my_camera_project/IMU_log.csv"
-# #     IMU_RES_FILE = "/home/x_user/my_camera_project/IMU_res.csv"
-# #     filename = '/home/x_user/my_camera_project/variable_store.json'
+# #     IMU_LOG_FILE = "/home/x_user/test/IMU_log.csv"
+# #     IMU_RES_FILE = "/home/x_user/test/IMU_res.csv"
 # #     Frames = []
 # #     X = np.array([])
 # #     Y = np.array([])
@@ -367,7 +366,7 @@ import onnx
 import onnxruntime as ort
 
 # Load and inspect model
-model = onnx.load("Class_Freq_R.onnx")
+model = onnx.load("/home/x_user/my_camera_project/Class_Freq_R.onnx")
 onnx.checker.check_model(model)
 
 # Print input/output info
@@ -380,6 +379,6 @@ for out in model.graph.output:
     print(f"  {out.name} {out.type.tensor_type.shape.dim}")
 
 # Alternatively use ONNX Runtime
-session = ort.InferenceSession("Class_Freq_R.onnx")
+session = ort.InferenceSession("/home/x_user/my_camera_project/Class_Freq_R.onnx")
 print(session.get_inputs())
 print(session.get_outputs())

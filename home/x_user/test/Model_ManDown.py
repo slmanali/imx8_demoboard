@@ -39,10 +39,10 @@ rf.fit(X_train, y_train)
 y_pred = rf.predict(X_test)
 conf_mat = confusion_matrix(y_test, y_pred)
 print(classification_report(y_test, y_pred))
-joblib.dump(rf, "Class_Freq_R.pkl")
+joblib.dump(rf, "/home/x_user/my_camera_project/Class_Freq_R.pkl")
 initial_type = [('float_input', FloatTensorType([None, 18]))]  # 17 if that's your feature size
 onnx_model = convert_sklearn(rf, initial_types=initial_type)
-with open("Class_Freq_R.onnx", "wb") as f:
+with open("/home/x_user/my_camera_project/Class_Freq_R.onnx", "wb") as f:
     f.write(onnx_model.SerializeToString())
 print('Finish')
 # import onnx

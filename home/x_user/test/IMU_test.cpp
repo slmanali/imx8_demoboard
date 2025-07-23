@@ -156,7 +156,7 @@ int main() {
         // Initialize ONNX Runtime
         Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "IMU_Classifier");
         Ort::SessionOptions session_options;
-        Ort::Session session(env, "Class_Freq_R.onnx", session_options);
+        Ort::Session session(env, "/home/x_user/my_camera_project/Class_Freq_R.onnx", session_options);
 
         // Get input/output info (MODIFIED)
         Ort::AllocatorWithDefaultOptions allocator;

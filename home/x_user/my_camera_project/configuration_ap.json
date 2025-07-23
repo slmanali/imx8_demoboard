@@ -25,6 +25,8 @@
   "level": 0,
   "INFO4": "testbench = 0 The powermanagment (battery) and (imu_classifier_thread) IMU will run, else will not work",
   "testbench": 0,
+  "script_gps":"/home/x_user/my_camera_project/gps_init.sh",
+  "script_vpn":"/home/x_user/my_camera_project/vpn_start_script.sh",
   "pipelines": {
     "_vl_loopback": "v4l2src device=/dev/$video ! video/x-raw,format=YUY2,width=$Width,height=$Height, framerate=$FPS/1 ! appsink sync=false max-buffers=1 drop=true",
     "snapshot_pipeline": "v4l2src device=/dev/$video num-buffers=1 ! video/x-raw,width=$Width,height=$Height ! videoconvert ! pngenc ! filesink location=/home/x_user/my_camera_project/snapshot.png",

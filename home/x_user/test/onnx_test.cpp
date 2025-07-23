@@ -8,7 +8,7 @@
 int main() {
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "test");
     Ort::SessionOptions session_options;
-    Ort::Session session(env, "Class_Freq_R.onnx", session_options);
+    Ort::Session session(env, "/home/x_user/my_camera_project/Class_Freq_R.onnx", session_options);
 
     // Prepare dummy input (17 features, must match your model input!)
     std::vector<float> input_features = {

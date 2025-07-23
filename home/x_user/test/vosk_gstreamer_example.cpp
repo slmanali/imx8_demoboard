@@ -3,7 +3,7 @@
 #include <thread>
 #include <chrono>
 
-#include "speechThread.h"
+#include "/home/x_user/my_camera_project/speechThread.h"
 #include <codecvt>
 #include <locale>
 // Global pointer to handle signal interruption
@@ -79,7 +79,7 @@ int main() {
 // #include <iostream>
 // #include <gst/gst.h>
 // #include <gst/app/gstappsink.h>
-// #include "vosk_api.h"
+// #include "/home/x_user/my_camera_project/vosk_api.h"
 // #include <cstring>
 // #include <jsoncpp/json/json.h>
 

@@ -1,5 +1,5 @@
-#include "Configuration.h"
-#include "HTTPSession.h"
+#include "/home/x_user/my_camera_project/Configuration.h"
+#include "/home/x_user/my_camera_project/HTTPSession.h"
 #include <iostream>
 #include <cassert>
 #include <fstream>

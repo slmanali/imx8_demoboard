@@ -2670,9 +2670,9 @@ void CameraViewer::AudioReset() {
     try {
         A_control.setVolumeLevel(55);
         A_control.setLineOutputVolume(60);
-        A_control.setCaptureInputVolume(30);
-        A_control.setDigitalPlaybackVolume(95);
-        A_control.setDigitalCaptureVolume(115);
+        A_control.setCaptureInputVolume(25);
+        A_control.setDigitalPlaybackVolume(90);
+        A_control.setDigitalCaptureVolume(70);
         // A_control.setDigitalPlaybackBoostVolume(0);
         // A_control.setDigitalSidetoneVolume(0);
         A_control.setCaptureInputType("ADC");
