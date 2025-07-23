@@ -1,6 +1,6 @@
-### C++ Library in Kernel - `6.1.36-imx8mp+ge6ac294d4629`
+# C++ Library in Kernel - `6.1.36-imx8mp+ge6ac294d4629`
 
-**OS:** Debian GNU/Linux 12 (bookworm)
+**OS: Debian GNU/Linux 12 (bookworm)**
 
 ---
 
@@ -124,7 +124,7 @@ For Qt5:
 sudo apt install libpoppler-qt5-dev
 ```
 
-For Qt6:
+For Qt6 (We are NOT using it- **NO NEED**):
 
 ```bash
 sudo apt install libpoppler-qt6-dev
@@ -157,7 +157,7 @@ deb http://security.debian.org/debian-security bookworm-security main contrib no
 deb-src http://security.debian.org/debian-security bookworm-security main contrib non-free
 ```
 
-Then:
+Then do this:
 
 ```bash
 sudo apt-get update
@@ -167,7 +167,7 @@ sudo apt-get install libgstreamer1.0-0=1.22.0-2+deb12u1
 sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 ```
 
-For kernel 5:
+For kernel 5 (We are NOT using it- **NO NEED**):
 
 ```bash
 sudo apt-get install libgstreamer1.0-0=1.18.0-1
@@ -196,7 +196,11 @@ sudo apt install libb64-dev
 
 ### 13. VOSK for C++
 
-Download from: https://github.com/alphacep/vosk-api/releases/vosk-linux-aarch64-0.3.45.zip
+IN General.
+
+Download it from: [https://github.com/alphacep/vosk-api/releases/vosk-linux-aarch64-0.3.45.zip]()
+
+But already installed the library (both the header file vosk_api.h and the library libvosk.so in the project directory)
 
 ```bash
 sudo cp /home/x_user/my_camera_project/libvosk.so /usr/local/lib
@@ -215,7 +219,11 @@ sudo apt-get install libzip-dev
 
 ### 15. ONNX Runtime (ManDown Feature)
 
-Download from: https://github.com/microsoft/onnxruntime/releases/download/v1.18.0/onnxruntime-linux-aarch64-1.18.0.tgz
+IN General
+
+Download from: [https://github.com/microsoft/onnxruntime/releases/download/v1.18.0/onnxruntime-linux-aarch64-1.18.0.tgz]()
+
+But already installed the library (both the header files  and the libraries in the folder onnxruntime in the project directory )
 
 ```bash
 sudo cp /home/x_user/my_camera_project/onnxruntime/lib/libonnxruntime.so /usr/local/lib
@@ -226,7 +234,7 @@ sudo ldconfig
 Test model (onnx_test) Test model + IMU (IMU_test)
 
 ```bash
-cd /home/x_user/my_camera_project
+cd /home/x_user/test
 g++ onnx_test.cpp -o onnx_test -I/home/x_user/my_camera_project/onnxruntime/include -lonnxruntime
 g++ -std=c++17 IMU_test.cpp -o imu_test -I/home/x_user/my_camera_project/onnxruntime/include -lonnxruntime -lm
 ```
@@ -246,6 +254,7 @@ In the last step some error appears related to (torch2.0 and tvm) you can ignore
 Use `Model_ManDown.py` to train. (Just in one)
 
 ```bash
+cd /home/x_user/test
 python3 Model_ManDown.py
 ```
 
@@ -288,6 +297,7 @@ sudo ldconfig
 Test the nmea installation
 
 ```bash
+cd /home/x_user/test
 gcc yourfile.c -o yourff -I/usr/local/include -L/usr/local/lib -lnmea
 ./yourff
 ```
@@ -337,7 +347,7 @@ boot
 
 ---
 
-### 19. GPU (Vulkan)  (No need just attempt to enable GPU)
+### 19. GPU (Vulkan)  (NO NEED just attempt to enable GPU)
 
 ```bash
 sudo apt-get install vulkan-tools libvulkan-dev vulkan-validationlayers-dev
@@ -514,7 +524,7 @@ sudo apt-get install libboost-all-dev
 
 ---
 
-### 27. Audio Control (Optional)
+### 27. Audio Control (Optional - NO NEED)
 
 ```bash
 sudo apt-get install pavucontrol
@@ -522,7 +532,7 @@ sudo apt-get install pavucontrol
 
 ---
 
-### 28. FFMPEG Build (No need just attempt to replace the gstreamer)
+### 28. FFMPEG Build (NO NEED just attempt to replace the gstreamer)
 
 ```bash
 wget https://ffmpeg.org/releases/ffmpeg-5.1.6.tar.gz
@@ -553,7 +563,7 @@ perf report
 
 ---
 
-### 30. PDF Generation (libharu)
+### 30. PDF Generation (libharu) NO NEED
 
 ```bash
 sudo apt install libhpdf-dev libpng-dev build-essential zlib1g-dev fonts-dejavu
@@ -569,7 +579,7 @@ sudo ldconfig
 
 ---
 
-### 31. Update to Qt6 (NO need just attempt)
+### 31. Update to Qt6 (NO NEED just attempt)
 
 ```bash
 sudo apt install qt6-base-dev qt6-multimedia-dev
@@ -609,7 +619,7 @@ QMAKE_LFLAGS += -fsanitize=address
 
 ---
 
-### 33. QMediaPlayer + GStreamer (NO need just attempt)
+### 33. QMediaPlayer + GStreamer (NO NEED just attempt)
 
 Update sources list:
 
@@ -642,7 +652,7 @@ find . -exec touch {} \;
 
 ---
 
-### 35. WiFi Connection History (NO need just command)
+### 35. WiFi Connection History (NO NEED just command)
 
 ```bash
 nmcli connection show | grep wifi
@@ -689,3 +699,15 @@ qmake my_camera_project.pro
 make clean
 make
 ```
+
+### Some Notes
+
+Better to use the Visual Studio code, to bulid and compile, bulid and test the appliaction first time.
+
+install doc2unix if there are problem in the files
+
+```
+sudo apt install dos2unix
+```
+
+No need the md file, they are just Markdown files used for documentation of the classes or files.
