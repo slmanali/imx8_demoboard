@@ -1,163 +1,405 @@
-# General Documentation for Commands and Scripts
+# 📚 Command Summary Documentation
 
-This document provides an overview and explanation of various commands and scripts used for networking, media processing, and system management on a Linux environment, particularly around interfacing with WiFi, GStreamer for media handling, and some system services.
+This document provides a categorized summary of essential commands used in development, debugging, networking, GStreamer, system management, and more — based on real-world usage from the provided log.
 
-## WiFi Connection Commands
+---
 
-### Connect to WiFi Networks
+## 🔧 1. **Wi-Fi & Network Configuration**
 
-These commands utilize `nmcli`, the command-line interface for NetworkManager, to connect to various WiFi networks:
+### Connect to Wi-Fi using `nmcli`
 
-- ```bash
-  sudo nmcli device wifi connect "TP-Link_71C0_5G" password "30963501"
-  ```
-  Connects to the 5GHz TP-Link network with the given password.
+```bash
+sudo nmcli device wifi connect "SSID" password "PASSWORD"
+```
 
-- ```bash
-  sudo nmcli device wifi connect "TP-Link_71C0" password "30963501"
-  ```
-  Connects to the 2.4GHz TP-Link network.
+**Examples:**
 
-- ```bash
-  sudo nmcli device wifi connect "SH_LP_NUC_office" password "12345678"
-  ```
-  Connects to a different network with the specified password.
+```bash
+sudo nmcli device wifi connect "TP-Link_71C0_5G" password "30963501"
+sudo nmcli device wifi connect "TP-Link_1912_5G" password "34773970"
+sudo nmcli device wifi connect "SH_LP_NUC_office" password "12345678"
+```
 
-### Alternative Connection Method
+### Manual Wi-Fi setup with `wpa_supplicant`
 
-- ```bash
-  sudo /opt/wifi_connect.sh wlan0 TP-Link_71C0 30963501
-  ```
-  This script connects to the specified WiFi network using interface `wlan0`.
+Generate config:
 
-### WPA Supplicant for WiFi Authentication
+```bash
+wpa_passphrase "SSID" "PASSWORD" > /etc/wpa_supplicant.conf
+```
 
-- ```bash
-  wpa_supplicant -B -i wlan0 -c <(wpa_passphrase "TP-Link_71C0" "30963501")
-  ```
-  This command starts `wpa_supplicant` to manage and authenticate the WiFi connection without relying on NetworkManager.
+Start `wpa_supplicant`:
 
-- ```bash
-  sudo wpa_passphrase "SH_LP_NUC_UZ" "12345678" > /etc/wpa_supplicant.conf
-  ```
-  Generates a configuration file for `wpa_supplicant` containing the specified network and password.
+```bash
+wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf
+```
 
-### WiFi Configuration Details Example
+Or specify driver explicitly:
 
-- ```plaintext
-  ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-  update_config=1
+```bash
+wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant.conf -B
+```
 
-  network={
-      ssid="TP-Link_71C0_5G"
-      psk="30963501"
-  }
-  ```
-  This is an example of a `wpa_supplicant` configuration file format.
+### Stop/Start NetworkManager
 
-## GStreamer Commands
+```bash
+sudo systemctl stop NetworkManager
+sudo systemctl start NetworkManager
+sudo systemctl enable NetworkManager
+```
 
-GStreamer is a powerful framework for building media-handling components. Below are command examples for streaming and processing audio and video.
+### Renew IP address
 
-### Streaming Video
+```bash
+dhclient -r wlan0  # Release
+dhclient -v wlan0  # Renew
+```
 
-To stream video from a camera:
+### Scan available networks
 
-- ```bash
-  gst-launch-1.0 v4l2src device=/dev/video1 ! videoconvert ! autovideosink
-  ```
-  Captures video from the device `/dev/video1`, converts it, and displays it.
+```bash
+iw wlan0 scan
+```
 
-### Streaming Over UDP
+---
 
-- ```bash
-  gst-launch-1.0 v4l2src device=/dev/video0 ! videoconvert ! vpuenc_h264 bitrate=5000 ! rtph264pay ! udpsink host=192.168.1.145 port=7002
-  ```
-  Streams video encoded in H264 format over UDP to the specified host and port.
+## 📺 2. **GStreamer Commands (Video/Audio Streaming)**
 
-### Receiving Video
+### Video: Stream from camera to UDP (H.264)
 
-To receive and play video streamed over UDP:
+```bash
+gst-launch-1.0 v4l2src device=/dev/video3 ! \
+video/x-raw,format=YUY2,width=1280,height=720 ! \
+imxvideoconvert_g2d ! \
+vpuenc_h264 bitrate=5000 ! \
+rtph264pay config-interval=3 mtu=1400 ! \
+udpsink host=192.168.1.145 port=7002
+```
 
-- ```bash
-  gst-launch-1.0 udpsrc port=7002 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
-  ```
-  Listens on UDP port `7002`, receives H264 video, and plays it back.
+### Video: Stream with high bitrate and advanced encoding
 
-### Processing Audio
+```bash
+gst-launch-1.0 v4l2src device=/dev/video3 ! \
+video/x-raw,width=1280,height=720 ! \
+videoconvert ! \
+vpuenc_h264 bitrate=8000 gop-size=15 qp-min=10 qp-max=40 ! \
+rtph264pay config-interval=3 mtu=1400 aggregate-mode=zero-latency ! \
+udpsink host=192.168.1.145 port=7009
+```
 
-Stream audio using GStreamer:
+### Video: Receive and display H.264 stream
 
-- ```bash
-  gst-launch-1.0 pulsesrc device=alsa_input.platform-sound-wm8904.stereo-fallback ! audio/x-raw, channels=1 ! audioconvert ! audioresample ! autoaudiosink
-  ```
-  Captures audio from a specified input device and plays it back.
+```bash
+gst-launch-1.0 udpsrc port=7002 caps="application/x-rtp,media=video,encoding-name=H264,payload=96" ! \
+rtpjitterbuffer ! \
+rtph264depay ! \
+h264parse ! \
+avdec_h264 ! \
+videoconvert ! \
+autovideosink
+```
 
-## System Management Commands
+### Video: Capture and save snapshots from stream
 
-### Managing Services
+```bash
+gst-launch-1.0 udpsrc uri=udp://localhost:7002 caps="application/x-rtp,media=video,clock-rate=90000,encoding-name=H264,payload=96" ! \
+rtpjitterbuffer ! \
+rtph264depay ! \
+h264parse ! \
+queue ! \
+imxvpudec ! \
+tee name=t \
+t. ! queue ! videoconvert ! imxeglvivsink fullscreen=True \
+t. ! queue ! videoconvert ! jpegenc ! multifilesink location="snapshot-%05d.jpeg" sync=false
+```
 
-Here are some commands for managing systemd services:
+### Video: Stream using imxv4l2videosrc (i.MX platform)
 
-- **Start, Stop, and Check Status of Services:**
-  ```bash
-  sudo systemctl stop <service_name>
-  sudo systemctl start <service_name>
-  sudo systemctl status <service_name>
-  ```
+```bash
+gst-launch-1.0 imxv4l2videosrc device=/dev/video0 ! \
+video/x-raw,width=640,height=480 ! \
+videoconvert ! \
+imxvpuenc_h264 bitrate=5000 ! \
+rtph264pay config-interval=3 mtu=1400 ! \
+udpsink host=192.168.1.145 port=7002
+```
 
-- **Enable Services on Boot:**
-  ```bash
-  sudo systemctl enable <service_name>
-  ```
+### Audio: Stream microphone via OPUS
 
-- **View Logs for Services:**
-  ```bash
-  sudo journalctl -u <service_name> -f  # Follow logs in real-time
-  ```
+```bash
+alsasrc device=hw:1,0 ! \
+opusenc complexity=0 frame-size=60 bitrate=32000 ! \
+rtpopuspay ! \
+udpsink host=192.168.1.116 port=5001
+```
 
-### Backup Commands
+### Audio: Stream with volume control and resampling
 
-For backing up system images:
+```bash
+alsasrc device=hw:0,0 ! \
+volume volume=1 ! \
+audioconvert ! \
+audioresample ! \
+audio/x-raw,channels=1,rate=8000 ! \
+opusenc complexity=0 frame-size=60 bitrate=32000 ! \
+rtpopuspay ! \
+udpsink host=192.168.0.123 port=6000
+```
 
-- ```bash
-  sudo dd if=/dev/mmcblk2 of=/root/tmp/backup_imageIMX8.img bs=4M status=progress
-  ```
-  This command creates a backup image of the specified block device.
+### Audio: Receive and play OPUS stream
 
-- ```bash
-  sudo dd if=/dev/mmcblk2p1 bs=4M | gzip > /root/IMX8.img.gz
-  ```
-  This command backs up a specific partition and compresses it.
+```bash
+udpsrc port=5001 caps="application/x-rtp,encoding-name=OPUS,clock-rate=48000" ! \
+rtpopusdepay ! \
+opusdec ! \
+audioconvert ! \
+autoaudiosink
+```
 
-## Configuration and Environment Variables
+### Audio: Loopback test
 
-### Network Manager Configuration
+```bash
+gst-launch-1.0 alsasrc ! audioconvert ! audioresample ! autoaudiosink
+```
 
-Ensure `wpa_supplicant` is enabled:
+### Audio: Test source with encoding
 
-- ```bash
-  sudo systemctl enable wpa_supplicant
-  ```
+```bash
+gst-launch-1.0 audiotestsrc ! \
+audioconvert ! \
+opusenc ! \
+rtpopuspay ! \
+udpsink host=192.168.0.123 port=6000
+```
 
-### Setting Up the Environment for Qt Applications
+---
 
-Configure environment variables for Qt applications:
+## 🔍 3. **System & Hardware Debugging**
 
-- ```bash
-  export QT_QPA_PLATFORM=wayland
-  ```
+### Check CPU frequency and governor
 
-This sets the Qt platform for Wayland, required for graphics applications.
+```bash
+cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+```
 
-## Notes on Command Usage
+### Set CPU to performance mode
 
-- Always ensure you verify WiFi passwords, network names, and device paths before executing commands.
-- Use the appropriate permissions (e.g., `sudo`) where necessary, especially with system-level commands.
-- For GStreamer, ensure the necessary plugins are installed to avoid dependency issues.
+```bash
+sudo cpupower frequency-set -g performance
+```
 
-## Conclusion
+### List V4L2 devices
 
-This document serves as a guide to some essential commands and configurations used in a Linux environment for networking, media processing, and service management. Always proceed with caution when executing commands that alter network settings or manage system services.
+```bash
+v4l2-ctl --list-devices
+```
+
+### Get camera info
+
+```bash
+v4l2-ctl -d /dev/video3 --info
+```
+
+### Set camera parameters
+
+```bash
+v4l2-ctl -d /dev/video3 --set-fmt-video=width=1280,height=720,pixelformat=YUYV
+v4l2-ctl -d /dev/video3 --set-parm=30  # 30 FPS
+```
+
+### Control camera sub-device (e.g., OV5640)
+
+```bash
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=contrast=0
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=red_balance=2000
+v4l2-ctl -d /dev/v4l-subdev2 --list-ctrls
+```
+
+---
+
+## 🔌 4. **GPIO Control**
+
+### Control GPIO pins using `gpioset`
+
+```bash
+gpioset gpiochip2 6=1    # Power on camera
+gpioset gpiochip2 6=0    # Power off
+gpioset gpiochip2 9=0    # Assert reset
+gpioset gpiochip2 9=1    # Release reset
+```
+
+### Camera power/reset sequence
+
+```bash
+gpioset gpiochip2 6=1; sleep 0.1; gpioset gpiochip2 6=0  # Power cycle
+gpioset gpiochip2 9=0; sleep 0.1; gpioset gpiochip2 9=1  # Reset
+```
+
+---
+
+## 🗃️ 5. **File & Image Backup**
+
+### Create compressed disk image
+
+```bash
+sudo dd if=/dev/mmcblk2 bs=4M | gzip > /root/IMX8.img.gz
+```
+
+### Restore from compressed image
+
+```bash
+gunzip -c /root/tmp/imx6_8_29_24.img.gz | dd of=/dev/mmcblk2
+```
+
+### Copy image over SSH
+
+```bash
+sudo dd if=/dev/mmcblk2 bs=4M | gzip -c | ssh ubuntu@109.95.85.186 'cat > imx8_image_15_07_2024.img.gz'
+```
+
+### Check disk usage
+
+```bash
+du -h --max-depth=1 /
+```
+
+---
+
+## 🔄 6. **Service & System Management**
+
+### Manage systemd service
+
+```bash
+sudo systemctl stop helmet8cpp.service
+sudo systemctl restart helmet8cpp.service
+sudo systemctl daemon-reload
+```
+
+### View service logs
+
+```bash
+sudo journalctl -u helmet8cpp.service -f
+sudo journalctl -u sh_client.service -f
+sudo journalctl -u helmet8cpp.service --since "2024-11-05 10:00:00"
+sudo journalctl -u helmet8cpp.service --priority=err
+```
+
+### Clean up journal logs
+
+```bash
+journalctl --vacuum-time=10d    # Keep last 10 days
+journalctl --vacuum-size=100M   # Limit to 100MB
+```
+
+---
+
+## 🖥️ 7. **Cross-Compilation & SDK Setup**
+
+### Sync sysroot from target device
+
+```bash
+rsync -avz root@192.168.1.123:/usr/include/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/include
+rsync -avz root@192.168.1.123:/usr/lib/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/lib
+rsync -avz root@192.168.1.123:/lib/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/lib
+rsync -avz root@192.168.1.123:/usr/local/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/local
+```
+
+### Add cross-compiler to PATH
+
+```bash
+export PATH=$PATH:/cygdrive/c/Users/user/Desktop/mx8_image_file/gcc-linaro-5.5.0-2017.10-x86_64_aarch64-linux-gnu/bin
+```
+
+---
+
+## 🐞 8. **Debugging & Development Tools**
+
+### Compile with OpenCV
+
+```bash
+g++ main.cpp -o gst_opencv_capture $(pkg-config --cflags --libs opencv4)
+```
+
+### Compile GStreamer + Vosk example
+
+```bash
+g++ vosk_gstreamer_example.cpp -o vosk_gstreamer_example \
+-lgstapp-1.0 -lgstreamer-1.0 -ljsoncpp -l/home/x_user/my_camera_project/libvosk.so
+```
+
+### Set environment variables for Qt/Wayland
+
+```bash
+export QT_QPA_PLATFORM=wayland
+export XDG_RUNTIME_DIR=/run/user/0
+export WAYLAND_DISPLAY=wayland-1
+os.environ['QT_OPENGL'] = "es2"
+```
+
+### GDB Debugging Shortcuts
+
+| Command                 | Description        |
+| ----------------------- | ------------------ |
+| `c` or `continue`   | Continue execution |
+| `n` or `next`       | Step over          |
+| `s` or `step`       | Step into          |
+| `bt` or `backtrace` | Show call stack    |
+| `print var`           | Print variable     |
+
+---
+
+## 📁 9. **Remote File Transfer**
+
+### Copy files via SCP
+
+```bash
+scp -r /path/to/source/folder user@target-device-ip:/path/to/destination
+```
+
+---
+
+## 🧹 10. **Miscellaneous Useful Commands**
+
+### Kill all instances of a process
+
+```bash
+sudo killall wpa_supplicant
+```
+
+### Run Python Gunicorn server
+
+```bash
+/home/ubuntu/venv/bin/python3 /home/ubuntu/venv/bin/gunicorn --bind 0.0.0.0:5000 wsgi --workers 1
+```
+
+### Test audio source
+
+```bash
+gst-launch-1.0 audiotestsrc ! audioconvert ! autoaudiosink
+```
+
+### Set environment for plugin path
+
+```bash
+export GST_PLUGIN_PATH=/usr/lib/aarch64-linux-gnu/gstreamer-1.0/
+```
+
+### Generate ARPA language model (KenLM)
+
+```bash
+echo "WORD LIST HERE" > corpus.txt
+./bin/lmplz -o 3 < corpus.txt > lm.arpa
+```
+
+---
+
+## ✅ Tips & Notes
+
+- Use `-v` flag in `gst-launch-1.0` for verbose output.
+- Always ensure camera is powered and reset properly before streaming.
+- When `Device or resource busy` occurs on I2C (`0x3c`), camera may be locked — try power cycling via GPIO.
+- For stable video streaming, use `imxvpuenc_h264` and `imxvpudec` on i.MX8 platforms.
+- Avoid using `optimize_full` and `-O3` when debugging with sanitizers.
 
 ---
