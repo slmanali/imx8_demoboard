@@ -1,0 +1,470 @@
+sudo nmcli device wifi connect "TP-Link_71C0_5G" password "30963501"
+sudo nmcli device wifi connect "TP-Link_1912_5G" password "34773970"
+sudo nmcli device wifi connect "TP-Link_71C0" password "30963501"
+sudo nmcli device wifi connect "SH_LP_NUC_office" password "12345678"
+sudo nmcli device wifi connect "SH_LP_NUC_UZ" password "12345678"
+sudo /opt/wifi_connect.sh wlan0 TP-Link_71C0 30963501
+wpa_supplicant -B -i wlan0 -c <(wpa_passphrase "TP-Link_71C0" "30963501")
+sudo wpa_passphrase "SH_LP_NUC_UZ" "12345678" > /etc/dbus-1/system.d/wpa_supplicant.conf
+sudo wpa_passphrase "SH_LP_NUC_UZ" "12345678" > /etc/wpa_supplicant/wpa_supplicant.conf
+sudo wpa_passphrase "SH_LP_NUC_UZ" "12345678" > /etc/wpa_supplicant.conf
+sudo nano /etc/systemd/system/custom-timesync.service
+wpa_supplicant -Dwext -iwlan0 -c /etc/wpa_supplicant.conf
+sudo dd if=/dev/mmcblk2p1 bs=4M | gzip > /root/IMX8.img.gz
+wpa_passphrase "TP-Link_71C0_5G" "30963501" > /etc/dbus-1/system.d/wpa_supplicant.conf
+wpa_passphrase "TP-Link_71C0" "30963501" > /etc/wpa_supplicant.conf
+sudo dd if=/dev/mmcblk2 of=/root/tmp/backup_imageIMX8.img bs=4M status=progress
+/opt/wifi_connect.sh "wlan0" "TP-Link_71C0_5G" "30963501"
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+1710417627668
+network={
+        ssid="TP-Link_71C0_5G"
+        psk="30963501"
+        psk=08411af7e58159c537a3a66c7dc8bb16fe6c4a0f705dd0d2ca080258d8d6f5c1
+}
+wpa_supplicant -B -i $1 -c <(wpa_passphrase "$2" "$3")
+
+ wpa_supplicant -Dnl80211 -iwlan0 -c /etc/wpa_supplicant.conf -B
+ wpa_supplicant -Dnl80211 -iwlan0 -c /etc/dbus-1/system.d/wpa_supplicant.conf -B
+ dhclient -r wlan0
+dhclient -v wlan0
+iw wlan0 scan
+systemctl status custom-timesync.service
+sudo systemctl stop NetworkManager
+sudo systemctl start NetworkManager
+gst-launch-1.0.exe udpsrc port=7009 caps = "application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264,payload=(int)96" ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
+gst-launch-1.0.exe udpsrc port=7009 caps="application/x-rtp,media=video,clock-rate=90000,encoding-name=H264,payload=96" ! rtpjitterbuffer latency=0 drop-on-latency=true ! queue  ! rtph264depay  ! avdec_h264   ! queue ! videoconvert ! gtksink sync=false
+
+systemctl status custom-timesync.service
+v4l2src device=/dev/video1 do-timestamp=1 name=\"source\" ! videorate drop-only=true max-rate=30 average-period=1000000000 name=\"videorate\" ! videoscale method=6 name=\"videoscale\" ! capsfilter caps=\"video/x-raw,width=1280,height=720,framerate=30/1\" name=\"capsfilter\" ! videoconvert ! queue flush-on-eos=true ! vpuenc_h264 bitrate=5000 name=\"encoder\" ! rtph264pay config-interval=3 mtu=1400 name=\"payloader\" ! multiudpsink name=\"multiudpsink\" clients=\"localhost:7002\"
+sudo apt install bluetooth bluez bluez-tools rfkill 
+
+mysqldump -u root -p smarthelmet --no-data smart_helmet_v2 > schema.dot
+
+/usr/bin/tac /home/x_user/client/ble_res.log | grep -m 1 "Received Data:" | awk '{print $6}'
+gstreamer-1.0 udpsrc port=5001 caps="application/x-rtp,media=audio,payload=96,clock-rate=48000,encoding-name=OPUS" ! rtpopusdepay ! opusdec ! autoaudiosink
+alsasrc device=hw:1,0 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=127.0.0.1 port=5001
+gst-launch-1.0 filesrc location=recorded_audio.wav ! wavparse ! audioconvert ! autoaudiosink
+gst-launch-1.0 alsasrc device=plughw:1,0 ! audioconvert ! autoaudiosink
+
+alsasrc device=hw:1,0 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! multiudpsink clients=localhost:5001,192.168.1.116:5001
+udpsrc port=5001 caps="application/x-rtp, media=(string)audio, channels=(int)1" ! rtpopusdepay ! opusdec ! queue ! audioconvert ! audioresample ! autoaudiosink
+gst-launch-1.0.exe udpsrc port=5003 caps="application/x-rtp,media=audio,payload=96,clock-rate=48000,encoding-name=OPUS" ! rtpopusdepay ! opusdec ! audioconvert ! autoaudiosink
+
+alsasrc device=hw:1,0 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! tee name=t t. ! queue ! udpsink host=127.0.0.1 port=5001 t. ! queue ! udpsink host=192.168.1.116 port=5001
+gst-launch-1.0 udpsrc port=5003 caps="application/x-rtp,media=audio,payload=96,clock-rate=48000,encoding-name=OPUS"! rtpopusdepay ! opusdec  ! audioconvert ! audioresample ! audio/x-raw, rate=16000 ! autoaudiosink
+volume volume=1 name="volume" ! audio/x-raw,channels=1,depth=16,width=16,clock-rate=8000,rate=8000
+gst-launch-1.0 alsasrc device=hw:0,0 ! audioconvert ! volume volume=1 ! audio/x-raw,channels=1,depth=16,width=16,clock-rate=8000,rate=8000 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! tee name=t t. ! queue ! appsink t. ! queue ! udpsink host=192.168.1.118 port=5001
+gst-launch-1.0 imxv4l2videosrc device=/dev/video0 imx-capture-mode=4 fps=30 queue-size=2 do-timestamp=1 ! videorate drop-only=true max-rate=30 average-period=1000000000  ! videoscale method=4  ! capsfilter caps=\"video/x-raw,width=1280,height=720,framerate=30/1\" ! videoconvert ! queue flush-on-eos=true ! imxvpuenc_h264 bitrate=5000  ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=10.8.0.4 port=8001
+gst-launch-1.0 udpsrc port=5000 caps = "application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264,payload=(int)96" ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
+
+cmake -D CMAKE_BUILD_TYPE=RELEASE       -D CMAKE_INSTALL_PREFIX=/usr/local       -D WITH_GSTREAMER=ON       -D WITH_GSTREAMER_0_10=OFF       -D BUILD_opencv_python2=OFF       -D BUILD_opencv_python3=ON       -D PYTHON_DEFAULT_EXECUTABLE=$(which python3)       -D BUILD_EXAMPLES=OFF       -D BUILD_DOCS=OFF       -D BUILD_TESTS=OFF       -D BUILD_PERF_TESTS=OFF       -D WITH_QT=OFF       -D WITH_OPENGL=OFF       -D OPENCV_EXTRA_MODULES_PATH=/root/opencv_contrib/modules
+4.1.2.30
+opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=192.168.1.116 port=5001
+udpsrc port=5000 caps=\"application/x-rtp,media=(string)audio,clock-rate=(int)16000,encoding-name=(string)OPUS,payload=(int)96\" ! "
+    "rtpopusdepay ! "
+    "opusdec ! "
+    "audioconvert ! volume volume=1 name="volume" ! audio/x-raw,channels=1,depth=16,width=16,clock-rate=8000,rate=8000 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=$SERVER_ADDRESS port=$AUDIO_PORT_SERVER
+	
+	udpsrc port=5000 caps="application/x-rtp,media=(string)audio,clock-rate=(int)16000,encoding-name=(string)OPUS,payload=(int)96" ! rtpopusdepay ! opusdec ! audioconvert ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=$SERVER_ADDRESS port=$AUDIO_PORT_SERVER
+	
+gst-launch-1.0 alsasrc device=plughw:1,0 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=192.168.1.118 port=5001
+
+gst-launch-1.0.exe udpsrc port=5003 caps=\"application/x-rtp,media=audio,payload=96,clock-rate=48000\" ! rtpspeexdepay ! speexdec ! audioconvert ! audioresample ! autoaudiosink
+
+gst-launch-1.0.exe ksvideosrc ! deinterlace ! videoconvert ! videoscale ! x264enc ! queue ! rtph264pay ! application/x-rtp, payload=(int)96, ssrc=(uint)1356955624 ! udpsink host=127.0.0.1 port=7002
+gst-launch-1.0.exe udpsrc port=7002 ! application/x-rtp, encoding-name=(string)H264, payload = (int)96, ssrc = (uint)1356955624 !rtph264depay !h264parse !avdec_h264 !videoconvert ! autovideosink
+gst-launch-1.0.exe ksvideosrc ! videoconvert ! autovideosink
+Xwayland -retro -noreset :12
+DISPLAY=:12 
+
+gst-launch-1.0 v4l2src device=/dev/video1 do-timestamp=1 name="source" ! videorate drop-only=true max-rate=30 average-period=1000000000 name="videorate" ! videoscale method=6 name="videoscale" ! capsfilter caps="video/x-raw,width=1280,height=720,framerate=10/1" name="capsfilter" ! tee name=t ! videoconvert ! queue flush-on-eos=true !  vpuenc_h264 bitrate=5000 name="encoder" ! rtph264pay config-interval=3 mtu=1400 name="payloader" ! udpsink name="udpsink" clients="127.0.0.1:7002" t. ! videoconvert !  autovideosink 
+appsink name=sink emit-signals=True  sync=False
+v4l2src device=/dev/video1 do-timestamp=1 name="source" ! videorate drop-only=true max-rate=30 average-period=1000000000 name="videorate" ! videoscale method=6 name="videoscale" ! capsfilter caps="video/x-raw,width=1280,height=720,framerate=10/1" name="capsfilter" ! tee name=t ! videoconvert ! queue flush-on-eos=true !  vpuenc_h264 bitrate=5000 name="encoder" ! rtph264pay config-interval=3 mtu=1400 name="payloader" ! udpsink name="udpsink" clients="192.168.1.131:7002" t. ! videoconvert ! autovideosink
+
+du -h --max-depth=1 /
+udpsrc port=7002 caps = \"application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264,payload=(int)96\" ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
+
+'v4l2src device=/dev/video1 do-timestamp=1 ! videorate drop-only=true max-rate=30 average-period=1000000000  ! videoscale method=6 ! capsfilter caps="video/x-raw,width=1280,height=720,framerate=30/1" ! tee name=t ! videoconvert ! queue flush-on-eos=true ! vpuenc_h264 bitrate=10000 ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=192.168.1.131:7002 t. ! videoconvert ! appsink '
+
+
+/home/ubuntu/venv/bin/python3 /home/ubuntu/venv/bin/gunicorn --bind 0.0.0.0:5000 wsgi --access-logfile - --workers 1
+sudo journalctl -u <service_name> -f
+sudo journalctl -u <service_name> --priority=err
+sudo journalctl -u <service_name> --since "YYYY-MM-DD HH:MM:SS" --until "YYYY-MM-DD HH:MM:SS"
+
+udpsrc uri=udp://localhost:7002 caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264,payload=(int)96" ! rtpjitterbuffer ! rtph264depay ! h264parse ! queue ! vpudec ! videoconvert ! autovideosink
+v4l2src device=/dev/video1 do-timestamp=1 ! videorate drop-only=true max-rate=10 average-period=1000000000 ! videoscale method=6 ! capsfilter caps=\"video/x-raw,width=1280,height=720,framerate=10/1\"  ! tee name=t ! videoconvert ! queue flush-on-eos=true !  vpuenc_h264 bitrate=5000  ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=192.168.1.131 port=7002 t. ! videoconvert ! autovideosink
+
+gst-launch-1.0.exe udpsrc port=5000 caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264,payload=(int)96" ! rtpjitterbuffer ! queue ! rtph264depay  ! queue ! avdec_h264 ! queue ! videoconvert ! queue ! autovideosink
+
+"appsrc ! videoconvert ! videoscale  ! vpuenc_h264  ! rtph264pay ! udpsink host=192.168.1.131 port=7002"
+"appsrc ! videoconvert ! videoscale  !  vpuenc_h264 ! rtph264pay ! udpsink host=192.168.1.131:7002"
+-
+
+gst-launch-1.0 -v ximagesrc use-damage=0 ! video/x-raw,framerate=30/1 ! videoconvert ! imxvpuenc_h264 tune=zerolatency bitrate=500 speed-preset=superfast ! rtph264pay config-interval=1 pt=96 ! udpsink host=192.168.1.131 port=6005
+
+gst-launch-1.0.exe ksvideosrc ! videoconvert ! videoscale method=3 ! video/x-raw,framerate=15/1,width=1280,height=720 ! queue ! vp8enc ! rtpvp8pay ! udpsink name="sink" host=192.168.1.139 port=7001
+gst-launch-1.0 -v ximagesrc use-damage=0 ! video/x-raw,framerate=30/1 ! videoconvert ! imxvpuenc_h264  bitrate=500 ! rtph264pay config-interval=1 pt=96 ! udpsink host=192.168.1.131 port=6005
+
+udpsrc uri=udp://10.8.0.2:7001 caps="application/x-rtp, media=(string)video,clock-rate=(int)90000, encoding-name=(string)VP8-DRAFT-IETF-01, payload=(int)96,framerate=15/1" ! rtpjitterbuffer drop-on-latency=True latency=500 ! rtpvp8depay ! queue ! vpudec ! videoconvert ! appsink
+
+OVj9jIYhbShlTBYkRigN
+dx9screencapsrc do-timestamp=true ! videobox name="videobox" top=0 right=0 bottom=0 left=0 ! queue ! videoconvert ! videoscale ! capsfilter name="capsfilter" caps="video/x-raw,format=I420,framerate=15/1,width=640,height=360" ! videorate ! queue ! vp8enc name="encoder" deadline=2000000 min_quantizer=60 max_quantizer=63 cpu-used=2 threads=2 keyframe-max-dist=30 ! rtpvp8pay ! udpsink name="sink" host=10.8.0.47 port=7001
+udpsrc uri=udp://192.168.1.145:7001 caps=\"application/x-rtp, media=(string)video,clock-rate=(int)90000, encoding-name=(string)VP8-DRAFT-IETF-01, payload=(int)96,framerate=15/1\" ! rtpjitterbuffer drop-on-latency=True latency=500 ! rtpvp8depay ! queue ! vp8dec ! videoconvert ! autovideosink ",
+helmet12587
+
+gst-launch-1.0 alsasrc ! audioconvert ! audioresample ! autoaudiosink
+v
+gst-launch-1.0 imxv4l2videosrc device=/dev/video0 ! videoconvert ! autovideosink
+gst-launch-1.0 v4l2src device=/dev/video1 ! qtdemux ! h264parse ! v4l2h264dec capture-io-mode=4 ! videoconvert ! autovideosink
+gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw, format=YUY2, width=640, height=480, framerate=30/1 ! imxvideoconvert_g2d ! video/x-raw, format=BGRx ! vpuenc_h264 bitrate=5000 ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=192.168.1.131 port=5000
+gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw, format=YUY2, width=640, height=480, framerate=30/1 ! videoconvert ! video/x-raw, format=BGRx ! vpuenc_h264 bitrate=5000 ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=192.168.1.128 port=7001
+
+##############################
+gst-launch-1.0 udpsrc uri=udp://localhost:7002 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtpjitterbuffer ! rtph264depay ! h264parse 
+! queue ! imxvpudec ! tee name=t \
+t. ! queue ! videoconvert ! imxeglvivsink fullscreen=True sync=true \
+t. ! queue ! videoconvert ! jpegenc ! multifilesink location="snapshot-%05d.jpeg" sync=false
+
+gst-launch-1.0 udpsrc uri=udp://localhost:7002 caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264,payload=(int)96" ! rtpjitterbuffer ! rtph264depay ! h264parse ! queue ! imxvpudec ! tee name=t \
+t. ! queue ! videoconvert ! imxeglvivsink fullscreen=True sync=true \
+t. ! queue ! videoconvert ! videorate ! video/x-raw,framerate=1/2 ! jpegenc ! multifilesink location="/home/x_user/client/record_images/snapshot-%05d.jpeg" sync=false
+
+
+imxv4l2videosrc device=/dev/video1 imx-capture-mode=4 fps=30 queue-size=2 name=\"camera\" do-timestamp=1 name=\"source\" ! videorate drop-only=true max-rate=30 average-period=1000000000 name=\"videorate\" ! videoscale method=4 name=\"videoscale\" ! capsfilter caps=\"video/x-raw,width=1280,height=720,framerate=30/1\" name=\"capsfilter\" ! videoconvert ! queue flush-on-eos=true ! imxvpuenc_h264 bitrate=5000 name=\"encoder\" ! rtph264pay config-interval=3 mtu=1400 name=\"payloader\" ! multiudpsink name=\"multiudpsink\" clients=\"localhost:7002\"
+
+journalctl --vacuum-size=100M
+journalctl --vacuum-time=10d
+journalctl --vacuum-time=1s
+
+sudo dd if=/dev/mmcblk2 bs=4M | gzip -c | ssh ubuntu@109.95.85.186 'cat > imx8_image_15_07_2024.img.gz'
+videoconvert
+
+# os.environ['QT_QPA_PLATFORM'] = 'xcb'
+# os.environ['QT_QPA_PLATFORM'] = 'eglfs'
+os.environ['QT_OPENGL'] = "es2"
+
+gst-launch-1.0.exe udpsrc port=7002 caps = "application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264,payload=(int)96" ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
+
+gunzip -c /root/tmp/imx6_8_29_24.img.gz | dd of=/dev/mmcblk2
+v4l2src device=/dev/video3 ! video/x-raw, format=YUY2, width=640, height=480 ! imxvideoconvert_g2d ! video/x-raw, format=RGB16 ! autovideosink
+
+gst-launch-1.0.exe directsoundsrc do-timestamp=1 ! audio/x-raw,channels=1,width=16,rate=8000 ! speexenc ! rtpspeexpay ! udpsink host=192.168.1.132:5002
+udpsrc uri=udp://192.168.1.132:5200 caps=\"application/x-rtp,clock-rate=8000\" ! rtpjitterbuffer drop-on-latency=True latency=500 ! rtpspeexdepay ! queue ! speexdec ! audioconvert ! autoaudiosink
+gst-launch-1.0 alsasrc ! audioconvert ! audioresample ! autoaudiosink
+
+udpsrc address=10.8.0.32 port=2500 caps="application/x-rtp,clock-rate=8000" ! rtpjitterbuffer drop-on-latency=True latency=500 ! rtpspeexdepay ! queue ! speexdec ! audioconvert ! alsasink sync=True 
+udpsrc uri=udp://192.168.1.148:2500 caps=\"application/x-rtp,clock-rate=8000\" ! rtpjitterbuffer drop-on-latency=True latency=500 ! rtpspeexdepay ! queue ! speexdec ! audioconvert ! autoaudiosink
+
+gst-launch-1.0 alsasrc ! volume volume=1 name="volume" ! audioconvert ! audioresample ! audio/x-raw,format=S16LE,channels=1,rate=16000 ! webrtcdsp echo-cancel=false noise-suppression-level=2 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=192.168.0. port=5001
+
+udpsrc port=5001 caps="application/x-rtp, media=(string)audio, channels=(int)1" ! rtpopusdepay ! opusdec ! queue ! audioconvert ! audioresample ! webrtcdsp echo-cancel=False high-pass-filter=True noise-suppression-level=moderate gain-control=False name="webrtcdsp" ! webrtcechoprobe ! audioconvert ! ladspa-cmt-dll-expand-rms threshold=40 expansion-ratio=0.5 output-envelope-attack=2.1 output-envelope-decay=0.1 name="expand" ! ladspa-cmt-dll-compress-rms threshold=100 compression-ratio=0.25 output-envelope-attack=0.1 output-envelope-decay=0.1 name="compress" ! audioconvert ! ladspa-cmt-dll-limit-rms threshold=1 output-envelope-attack=2.2 output-envelope-decay=0.1 name="limit" ! audioconvert ! ladspa-cmt-dll-amp-stereo gain=80 name="amp" ! audioconvert ! tee name=t ! queue ! audioconvert ! audioresample ! autoaudiosink t. ! queue ! audioconvert ! audioresample ! audio/x-raw,clock-rate=44100,channels=1,rate=8000 ! rtpL16pay ! udpsink name="sink" host=localhost port=5003
+sudo journalctl -u sh_client.service -f
+
+v4l2src device=/dev/video1 ! video/x-raw, format=YUY2, width=640, height=480 ! videorate ! video/x-raw ! imxvideoconvert_g2d ! video/x-raw, format=BGRx ! autovideosink
+
+cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+sudo cpupower frequency-set -g performance
+rsync -avz root@192.168.1.123:/usr/include/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/include
+rsync -avz root@192.168.1.123:/usr/lib/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/lib
+rsync -avz root@192.168.1.123:/lib/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/lib
+rsync -avz root@192.168.1.123:/usr/share/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/share
+rsync -avz root@192.168.1.123:/usr/local/ /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/local
+rsync -avz root@192.168.1.123:/usr/bin/qmake /cygdrive/c/Users/user/Desktop/mx8_image_file/DH/sysroot/bin/
+/cygdrive/c/Users/user/Desktop/mx8_image_file/qt-opensource-linux-x64-5.12.12.run
+
+tar -xf /cygdrive/c/Users/user/Desktop/mx8_image_file/gcc-linaro-5.5.0-2017.10-x86_64_aarch64-linux-gnu.tar.xz -C /cygdrive/c/Users/user/Desktop/mx8_image_file/
+export PATH=$PATH:/cygdrive/c/Users/user/Desktop/mx8_image_file/gcc-linaro-5.5.0-2017.10-x86_64_aarch64-linux-gnu/bin
+
+
+
+./configure \
+    -release \
+    -opengl es2 \
+    -device linux-imx8mp-g++ \
+    -device-option CROSS_COMPILE=arm-linux-gnueabihf- \
+    -sysroot c:/Users/user/Desktop/mx8_image_file/DH/sysroot \
+    -prefix /usr/local/qt5.12.2 \
+    -opensource \
+    -confirm-license \
+    -nomake examples -nomake tests \
+    -no-use-gold-linker
+
+setenv fdt_file imx8mp-var-dart-dt8mcustomboard.dtb
+
+sudo apt-get install --reinstall gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools
+
+gst-launch-1.0 -v v4l2src device=/dev/video0 ! video/x-raw, format=YUY2, width=160, height=120, framerate=15/1 ! videoconvert !  video/x-raw, format=BGR ! autovideosink
+
+gst-launch-1.0 -v v4l2src device=/dev/video0 ! video/x-raw, format=YUY2, width=320, height=240, framerate=30/1 ! videoconvert ! vpuenc_h264 bitrate=1000 ! rtph264pay config-interval=3 ! udpsink host=10.8.0.2 port=5000
+
+
+gst-launch-1.0 ximagesrc show-pointer=false use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! vpuenc_h264 bitrate=5000 ! rtph264pay ! udpsink host=192.168.0.147 port=5000
+
+gst-launch-1.0 -v imxv4l2videosrc device=/dev/video0 ! video/x-raw, format=UYVY, width=640, height=480 ! videoconvert ! imxvpuenc_h264 bitrate=1000 ! rtph264pay config-interval=3 ! udpsink host=10.8.0.2 port=5000
+
+gst-launch-1.0 -v udpsrc port=5000 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
+
+export GST_PLUGIN_PATH=/usr/lib/aarch64-linux-gnu/gstreamer-1.0/
+
+gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw, format=YUY2, width=640, height=480 ! videorate ! video/x-raw ! imxvideoconvert_g2d ! video/x-raw,format=BGRx ! autovideosink
+
+gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw, format=YUY2, width=320, height=240 ! videorate ! video/x-raw, framerate=15/1 ! imxvideoconvert_g2d ! autovideosink
+gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw, width=320, height=240 ! videoconvert ! autovideosink
+
+Continue Execution: continue or c
+Step Over (next line): next or n
+Step Into (function calls): step or s
+Print Variables: print variable_name
+Backtrace (view call stack): backtrace or bt
+
+gst-launch-1.0 alsasrc device=hw:0,0 ! volume volume=5 ! audioconvert ! audioresample ! audio/x-raw,channels=1,depth=16,width=16,clock-rate=8000,rate=8000 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=192.168.0.123 port=6000
+pulsesrc device=alsa_input.platform-sound-wm8904.stereo-fallback ! volume volume=2.0 name=\"volume\" ! audioconvert ! audioresample ! audio/x-raw,format=S16LE,channels=1,rate=16000 ! webrtcdsp echo-cancel=false noise-suppression-level=2 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=192.168.0.123 port=6000
+audiotestsrc
+gst-launch-1.0 audiotestsrc ! audio/x-raw,channels=1,depth=16,width=16,clock-rate=8000,rate=8000 ! opusenc complexity=0 frame-size=60 bandwidth=narrowband bitrate=32000 ! rtpopuspay ! udpsink host=192.168.0.123 port=6000
+gst-launch-1.0 audiotestsrc ! audioconvert ! audioresample ! autoaudiosink
+
+gst-launch-1.0 audiotestsrc ! audioconvert ! audioresample ! audio/x-raw,channels=1,width=16,rate=8000 ! speexenc ! rtpspeexpay ! udpsink host=192.168.0.127 port=6000
+gst-launch-1.0.exe udpsrc port=6000 caps="application/x-rtp, media=(string)audio, channels=(int)1" ! rtpspeexdepay ! speexdec ! queue ! audioconvert ! audioresample ! autoaudiosink
+gst-launch-1.0.exe directsoundsrc do-timestamp=1 ! audioconvert ! audioresample ! audio/x-raw,channels=1,width=16,rate=8000 ! speexenc ! rtpspeexpay ! udpsink host=192.168.1.140 port=6000
+gst-launch-1.0.exe directsoundsrc do-timestamp=1 ! audioconvert ! audioresample ! audio/x-raw,channels=1,width=16,rate=8000 ! opusenc ! rtpopuspay ! udpsink host=192.168.1.140 port=6000
+
+gst-launch-1.0 udpsrc uri=udp://192.168.0.127:6000 caps=\"application/x-rtp,clock-rate=8000\" ! rtpjitterbuffer drop-on-latency=True latency=500 ! rtpspeexdepay ! queue ! speexdec ! audioconvert ! alsasink device=hw:0,0
+
+
+g++ camera_display.cpp -o camera_display  -lcurl -ljsoncpp -std=c++11 -lpthread
+ g++ main.cpp WiFiManager.h HTTPSession.h Configuration.h Logger.h -o wifi_manager_app  -lcurl -ljsoncpp -std=c++11 -lpthread
+ 
+ {'id_call': 4688, 'vpn': 1, 'ipv4': '10.8.0.2', 'username': 'salman', 'avatar': None, 'ssrc': 561388006, 'key': '544600029689854590073610067294324419498649506664150084386828', 'im': [], 'events': []}
+ {'id_call': 4688, 'vpn': 1, 'ipv4': '10.8.0.2', 'username': 'salman', 'avatar': None, 'ssrc': 561388006, 'key': '544600029689854590073610067294324419498649506664150084386828', 'procedure': {'name': 'Repair pump1', 'tasks': [{'text': 'Stop pump', 'completed': False, 'order': 1}, {'text': 'Disconnect Pump from electricity', 'completed': False, 'order': 2}, {'text': 'Replace stator', 'completed': False, 'order': 3}, {'text': 'connect pump1', 'completed': False, 'order': 4}]}, 'im': [{'idMessage': 542, 'text': 'sdfsdfd'}], 'events': [{'idCallEvent': 24348, 'event': {'cmd': 'playbackVolume', 'data': 100}}, {'idCallEvent': 24349, 'event': {'cmd': 'digitalMicrophone', 'data': 0}}, {'idCallEvent': 24350, 'event': {'cmd': 'microphoneVolume', 'data': 107}}, {'idCallEvent': 24351, 'event': {'cmd': 'videoSettings', 'data': '5000,25,1280,720', 'from': 'server'}}]}}
+[2024-11-05 12:04:12.200852: DEBUG] Function: [draw_tasklist, line: 434] in File: [app_gui.py] MSG: [GUI] [{'text': 'Stop pump', 'completed': False, 'order': 1}, {'text': 'Disconnect Pump from electricity', 'completed': False, 'order': 2}, {'text': 'Replace stator', 'completed': False, 'order': 3}, {'text': 'connect pump1', 'completed': False, 'order': 4}]
+
+
+try {
+
+
+} catch (const std::exception& e) {
+            LOG_ERROR("Something went wrong while handle_tasks_reset: " + std::string(e.what()));      
+        }
+		
+		
+import subprocess
+
+# Create corpus.txt with the list of words
+subprocess.run('echo "ЗАКРЫТЬ УВЕЛИЧИТЬ ДАЛЬШЕ ЗАДАЧИ ДОКУМЕНТ ЗАВЕРШИТЬ НАЗАД УМЕНЬШИТЬ ВВЕРХ ОПУСТИТЬ ПЕРВЫЙ ВТОРОЙ ТРЕТИЙ ЧЕТВЕРТЫЙ ВПРАВО ВЛЕВО" > corpus.txt', shell=True)
+
+# Generate the ARPA model
+subprocess.run('./bin/lmplz -o 3 < corpus.txt > lm.arpa', shell=True, cwd='path_to_kenlm_directory')
+
+
+v4l2src device=/dev/video3 ! video/x-raw, format=YUY2, width=640, height=480 ! videoconvert ! videoscale ! vpuenc_h264 bitrate=5000 ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=192.168.1.145 port=1500
+
+gst-launch-1.0 imxv4l2videosrc device=/dev/video0 ! video/x-raw, width=640, height=480 ! videoconvert ! videoscale ! imxvpuenc_h264 bitrate=5000 ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=192.168.1.145 port=7002
+gst-launch-1.0 -v v4l2src device=/dev/video3  ! videoconvert ! autovideosink
+gst-launch-1.0 -v imxv4l2videosrc device=/dev/video0  ! videoconvert ! autovideosink
+gst-launch-1.0 udpsrc port=1500 caps="application/x-rtp,media=video,clock-rate=90000,encoding-name=H264,payload=96" ! \
+rtph264depay ! h264parse ! v4l2h264dec ! videoconvert ! videoscale ! vpuenc_h264 bitrate=5000 ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=ipv4 port=_port
+
+v4l2-ctl --list-devices
+
+
+gpioset gpiochip4 3=0
+
+g++ vosk_gstreamer_example.cpp -o vosk_gstreamer_example -lgstapp-1.0 -lgstreamer-1.0 -ljsoncpp -l/home/x_user/my_camera_project/libvosk.so
+
+gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw, width=640, height=480 ! videoconvert ! videoscale ! vpuenc_h264 bitrate=5000 ! rtph264pay config-interval=3 mtu=1400 ! udpsink host=192.168.1.145 port=7002
+
+
+gst-launch-1.0 pulsesrc device=alsa_input.platform-sound-wm8904.stereo-fallback  ! audioconvert ! audioresample ! autoaudiosink
+
+gst-launch-1.0 v4l2src device=/dev/video3 ! videoconvert ! videoscale ! video/x-raw,width=1280,height=720 ! vpuenc_h264 bitrate=8000 gop-size=15 quant=-1 qp-min=10 qp-max=40 stream-multislice=4 profile=9 level=-1 qos=true ! rtph264pay config-interval=3 mtu=1400 aggregate-mode=zero-latency ! udpsink host=192.168.1.145 port=7009 buffersize=1048576 blocksize=1400
+
+g++ main.cpp -o gst_opencv_capture $(pkg-config --cflags --libs opencv4)
+
+v4l2src device=/dev/video3 ! video/x-raw,width=1280,height=720 ! videoconvert ! videorate drop-only=true max-rate=25 average-period=1000000000 ! videoscale method=4 ! tee name=t t. ! queue ! vpuenc_h264 bitrate=8000 ! rtph264pay config-interval=3 mtu=1400 aggregate-mode=zero-latency ! udpsink host=127.0.0.1 port=1500 t. ! queue ! appsink sync=false max-buffers=1 drop=true
+
+gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw,format=YUY2,width=1280,height=720 ! videoconvert ! waylandsink
+
+gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw,format=YUY2,width=1920,height=1080 ! imxvideoconvert_g2d ! waylandsink
+gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw,format=YUY2,width=1920,height=1080,framerate=30/1 ! imxvideoconvert_g2d ! queue max-size-buffers=2 ! v4l2h264enc ! video/x-h264,profile=high ! v4l2h264dec ! imxvideoconvert_g2d ! video/x-raw,format=RGBA ! waylandsink
+
+pulsesrc device=alsa_input.platform-sound-wm8904.stereo-fallback !  volume volume=2.0 ! audioconvert ! audioresample ! audio/x-raw,format=S16LE,rate=44100,channels=2 ! pulsesink device=alsa_output.platform-sound-wm8904.stereo-fallback
+
+scp -r /path/to/source/folder user@target-device-ip:/path/to/destination
+[   20.063959] NET: Registered PF_ALG protocol family
+[   21.991339] platform gpio-keys: deferred probe pending
+[   21.996497] i2c 3-003c: deferred probe pending
+[   22.000965] i2c 1-0038: deferred probe pending
+[   26.482516] mxc-mipi-csi2.1: mipi_csis_imx8mp_phy_reset, No remote pad found!
+[   27.166214] systemd-journald[247]: Time jumped backwards, rotating.
+[   27.303488] systemd-journald[247]: Time jumped backwards, rotating.
+ [   30.198491] mxc-mipi-csi2.1: mipi_csis_imx8mp_phy_reset, No remote pad found!
+[   30.739403] bypass csc
+[   30.741780] input fmt YUV4
+[   30.744485] output fmt YUYV
+
+[Unit]
+Description=Helmet C++ Application
+After=weston.service
+
+[Service]
+Restart=always
+RestartSec=20
+User=root
+WorkingDirectory=/home/x_user/my_camera_project
+Environment="QT_QPA_PLATFORM=wayland"
+Environment="XDG_RUNTIME_DIR=/run/user/0"
+Environment="WAYLAND_DISPLAY=wayland-1"
+ExecStart=/home/x_user/my_camera_project/run_app.sh
+#Environment="XDG_RUNTIME_DIR=/run/user/0"
+#Environment="WAYLAND_DISPLAY=/run/wayland-0"
+#Environment="QT_QPA_PLATFORM=wayland"
+#Environment="GST_PLUGIN_PATH=/usr/lib/aarch64-linux-gnu/gstreamer-1.0/"
+#ExecStartPre=/bin/bash -c 'mkdir -p /run/user/0 && chmod 0700 /run/user/0'
+#CapabilityBoundingSet=CAP_SYS_TIME CAP_NET_ADMIN CAP_SETGID CAP_SETUID
+#AmbientCapabilities=CAP_SYS_TIME CAP_NET_ADMIN CAP_SETGID CAP_SETUID
+
+[Install]
+WantedBy=graphical.target
+v4l2-ctl -d /dev/video3 --info
+
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=white_balance_automatic=1
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=blue_balance=1800
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=red_balance=1
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=red_balance=2000
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=hue=359 
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/v4l-subdev2 --list-ctrls
+
+User Controls
+
+                       contrast 0x00980901 (int)    : min=0 max=255 step=1 default=0 value=0 flags=slider
+                     saturation 0x00980902 (int)    : min=0 max=255 step=1 default=64 value=64 flags=slider
+                            hue 0x00980903 (int)    : min=0 max=359 step=1 default=0 value=0 flags=slider
+        white_balance_automatic 0x0098090c (bool)   : default=1 value=1 flags=update
+                    red_balance 0x0098090e (int)    : min=0 max=4095 step=1 default=0 value=0 flags=inactive, slider
+                   blue_balance 0x0098090f (int)    : min=0 max=4095 step=1 default=0 value=0 flags=inactive, slider
+                       exposure 0x00980911 (int)    : min=0 max=1100 step=1 default=0 value=993 flags=inactive, volatile
+                 gain_automatic 0x00980912 (bool)   : default=1 value=0 flags=update
+                horizontal_flip 0x00980914 (bool)   : default=0 value=0
+                  vertical_flip 0x00980915 (bool)   : default=0 value=0
+           power_line_frequency 0x00980918 (menu)   : min=0 max=3 default=1 value=1 (50 Hz)
+
+Camera Controls
+
+                  auto_exposure 0x009a0901 (menu)   : min=0 max=1 default=0 value=0 (Auto Mode) flags=update
+
+Image Source Controls
+
+              vertical_blanking 0x009e0901 (int)    : min=24 max=2295 step=1 default=24 value=24
+            horizontal_blanking 0x009e0902 (int)    : min=314 max=314 step=1 default=314 value=960 flags=read-only
+                  analogue_gain 0x009e0903 (int)    : min=0 max=1023 step=1 default=0 value=40
+
+Image Processing Controls
+
+                 link_frequency 0x009f0901 (intmenu): min=0 max=22 default=19 value=6 (592000000 0x23493400) flags=read-only, volatile
+                     pixel_rate 0x009f0902 (int64)  : min=48000000 max=168000000 step=1 default=48000000 value=48000000 flags=read-only, volatile
+                   test_pattern 0x009f0903 (menu)   : min=0 max=4 default=0 value=0 (Disabled)
+				   
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/video3   --set-parm=30  # Sets 60fps
+Frame rate set to 30.000 fps
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/video3   --set-fmt-video=width=1280,height=720,pixelformat=YUYV
+root@imx8mp-var-dart:~# v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=contrast=0 
+
+v4l2-ctl -d /dev/video3 --set-fmt-video=width=1280,height=720,pixelformat=RGB3
+
+
+
+sudo systemctl stop helmet8cpp.service
+sudo systemctl restart helmet8cpp.service
+sudo systemctl daemon-reload
+
+sudo killall wpa_supplicant
+
+sudo systemctl enable NetworkManager
+sudo systemctl enable wpa_supplicant  
+
+sudo systemctl start NetworkManager
+sudo systemctl enable wpa_supplicant  
+
+root@imx8mp-var-dart:~# [   54.153883] mxc-mipi-csi2.1: mipi_csis_imx8mp_phy_reset, No remote pad found!
+[   54.791923] bypass csc
+[   54.794353] input fmt YUV4
+[   54.797079] output fmt YUYV
+[   64.757809] mxc-mipi-csi2.1: mipi_csis_imx8mp_phy_reset, No remote pad found!
+[   65.390163] bypass csc
+[   65.392536] input fmt YUV4
+[   65.395259] output fmt YUYV
+[  127.146130] Bridge firewalling registered
+[  127.337367] Initializing XFRM netlink socket
+[  272.756603] mxc-mipi-csi2.1: mipi_csis_imx8mp_phy_reset, No remote pad found!
+[  273.060998] ov5640 1-003c: ov5640_write_reg: error: reg=3906, val=10
+[  273.068325] ov5640 1-003c: ov5640_read_reg: error: reg=3503
+[  273.073988] mxc_isi.0: Call subdev s_power fail!
+[ 1477.668554] mxc-mipi-csi2.1: mipi_csis_imx8mp_phy_reset, No remote pad found!
+[ 1478.303415] bypass csc
+[ 1478.305787] input fmt YUV4
+[ 1478.308508] output fmt YUYV
+[ 1519.268880] mxc-mipi-csi2.1: mipi_csis_imx8mp_phy_reset, No remote pad found!
+[ 1519.577353] ov5640 1-003c: ov5640_write_reg: error: reg=3c01, val=a4
+[ 1519.685338] ov5640 1-003c: ov5640_write_reg: error: reg=3108, val=1
+[ 1519.691640] mxc_isi.0: Call subdev s_power fail!
+the previous happiened during this 
+root@imx8mp-var-dart:~# gpioset gpiochip2 6=1  # Power down
+root@imx8mp-var-dart:~# gpioset gpiochip2 9=0  # Assert reset
+root@imx8mp-var-dart:~# sleep 0.1
+root@imx8mp-var-dart:~# gpioset gpiochip2 6=0  # Power on
+root@imx8mp-var-dart:~# sleep 0.1
+root@imx8mp-var-dart:~# gpioset gpiochip2 9=1  # Release reset
+root@imx8mp-var-dart:~# gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw,format=YUY2,width=1280,height=720 ! imxvideoconvert_g2d ! waylandsink -v
+Setting pipeline to PAUSED ...
+Pipeline is live and does not need PREROLL ...
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+New clock: GstSystemClock
+/GstPipeline:pipeline0/GstV4l2Src:v4l2src0.GstPad:src: caps = video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)1:4:5:1
+/GstPipeline:pipeline0/GstCapsFilter:capsfilter0.GstPad:src: caps = video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)1:4:5:1
+/GstPipeline:pipeline0/imxvideoconvert_g2d:imxvideoconvert_g2d0.GstPad:src: caps = video/x-raw, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, format=(string)BGRx
+/GstPipeline:pipeline0/GstWaylandSink:waylandsink0.GstPad:sink: caps = video/x-raw, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, format=(string)BGRx
+/GstPipeline:pipeline0/imxvideoconvert_g2d:imxvideoconvert_g2d0.GstPad:sink: caps = video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)1:4:5:1
+/GstPipeline:pipeline0/GstCapsFilter:capsfilter0.GstPad:sink: caps = video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)1:4:5:1
+^Chandling interrupt.
+Interrupt: Stopping pipeline ...
+Execution ended after 0:00:14.535506803
+Setting pipeline to NULL ...
+Freeing pipeline ...
+root@imx8mp-var-dart:~# i2cset -y 1 0x3c 0x30 0x00  # Write to a safe register (e.g., chip ID high)
+Error: Could not set address to 0x3c: Device or resource busy
+root@imx8mp-var-dart:~# i2cget -y 1 0x3c 0x30       # Read chip ID high (should return 0x56 for OV5640)
+Error: Could not set address to 0x3c: Device or resource busy
+root@imx8mp-var-dart:~# i2cget -y 1 0x3c 0x31       # Read chip ID low (should return 0x40)
+Error: Could not set address to 0x3c: Device or resource busy
+root@imx8mp-var-dart:~# gst-launch-1.0 v4l2src device=/dev/video3 ! video/x-raw,format=YUY2,width=1280,height=720 ! imxvideoconvert_g2d ! waylandsink -v
+Setting pipeline to PAUSED ...
+Pipeline is live and does not need PREROLL ...
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+New clock: GstSystemClock
+/GstPipeline:pipeline0/GstV4l2Src:v4l2src0.GstPad:src: caps = video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)1:4:5:1
+/GstPipeline:pipeline0/GstCapsFilter:capsfilter0.GstPad:src: caps = video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)1:4:5:1
+/GstPipeline:pipeline0/imxvideoconvert_g2d:imxvideoconvert_g2d0.GstPad:src: caps = video/x-raw, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, format=(string)BGRx
+/GstPipeline:pipeline0/GstWaylandSink:waylandsink0.GstPad:sink: caps = video/x-raw, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, format=(string)BGRx
+/GstPipeline:pipeline0/imxvideoconvert_g2d:imxvideoconvert_g2d0.GstPad:sink: caps = video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)1:4:5:1
+/GstPipeline:pipeline0/GstCapsFilter:capsfilter0.GstPad:sink: caps = video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, framerate=(fraction)30/1, interlace-mode=(string)progressive, colorimetry=(string)1:4:5:1
+ERROR: from element /GstPipeline:pipeline0/GstV4l2Src:v4l2src0: Failed to allocate required memory.
+Additional debug info:
+../sys/v4l2/gstv4l2src.c(976): gst_v4l2src_decide_allocation (): /GstPipeline:pipeline0/GstV4l2Src:v4l2src0:
+Buffer pool activation failed
+Execution ended after 0:00:00.268461591
+Setting pipeline to NULL ...
+ERROR: from element /GstPipeline:pipeline0/GstV4l2Src:v4l2src0: Internal data stream error.
+Additional debug info:
+/usr/src/debug/gstreamer1.0/1.22.0.imx-r0/libs/gst/base/gstbasesrc.c(3132): gst_base_src_loop (): /GstPipeline:pipeline0/GstV4l2Src:v4l2src0:
+streaming stopped, reason not-negotiated (-4)
+Freeing pipeline ...
+
+ffmpeg -video_size 800x480 -framerate 10 -c:v libx264 -crf 23 output.mp4

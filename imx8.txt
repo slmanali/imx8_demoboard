@@ -1,0 +1,263 @@
+sudo apt install ipcalc
+sudo apt install nmap
+################################################################################################
+startup_nmap_scan.sh
+############################################################
+#!/bin/bash
+
+# Wait for the Internet connection on wlan0
+while ! ip -4 addr show wlan0 | grep -q inet; do
+    sleep 10  # Check every 10 seconds
+done
+
+# Function to perform nmap scan
+perform_scan() {
+    # Using --open to only show hosts that have at least one open port
+	# Example pseudocode for deriving the network and performing a scan
+	IP=$(ip -4 addr show wlan0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+	NETMASK=$(ip -4 addr show wlan0 | awk '/inet / {split($2, a, "/"); print a[2]}')
+	NETWORK=$(ipcalc -n $IP/$NETMASK | awk '/Network:/ {print $2}')
+	echo $IP
+	echo $NETWORK
+	#nmap -sP $NETWORK
+    result=$(sudo nmap -sP $NETWORK --open --min-hostgroup 100)
+    echo "$result"
+    # Check if any hosts were up
+    if echo "$result" | grep -q "Host is up"; then
+        echo "At least one host is up."
+        return 0  # success
+    else
+        return 1  # failure
+    fi
+}
+
+# Initial scan
+perform_scan
+
+# If no hosts were up, keep retrying
+while [ $? -ne 0 ]; do
+    echo "No hosts up, retrying in 10 seconds..."
+    sleep 10
+    perform_scan
+done
+################################################################################################
+sudo nano /etc/systemd/system/nmap_scan.service
+############################################################
+[Unit]
+Description=Run nmap scan after network is up
+Requires=custom-timesync.service
+After=network-online.target systemd-timesyncd
+
+[Service]
+Type=oneshot
+ExecStart=/root/startup_nmap_scan.sh
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
+############################################################
+sudo systemctl daemon-reload
+sudo systemctl enable nmap_scan.service
+sudo systemctl restart nmap_scan.service
+sudo systemctl status nmap_scan.service
+################################################################################################
+sudo nano /etc/systemd/system/custom-timesync.service
+############################################################
+sudo apt-get install ntp
+sudo chmod +x /usr/sbin/ntpd
+############################################################
+[Unit]
+Description=Custom time synchronization
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStartPre=/bin/sh -c '/usr/bin/killall -q ntpd || true'
+ExecStart=/usr/sbin/ntpd -gN
+TimeoutStartSec=10
+Type=oneshot
+RemainAfterExit=yes
+
+
+[Install]
+WantedBy=multi-user.target
+
+############################################################
+sudo systemctl daemon-reload
+sudo systemctl restart custom-timesync.service
+sudo systemctl status custom-timesync.service
+sudo journalctl -u systemd-timesyncd.service -b
+sudo journalctl -u helmet8cpp.service -b
+sudo journalctl -u custom-timesync.service -f
+journalctl -u nmap_scan.service
+################################################################################################
+sudo dd if=/dev/mmcblk2boot0 of=/root/tmp/imx-boot-sd.bin bs=1M count=1
+sudo dd if=/dev/mmcblk2boot1 of=/root/tmp/imx-boot-sd.bin bs=1M count=1
+sudo dd if=/dev/mmcblk2boot0 of=/root/tmp/imx-boot-sd.bin bs=512 count=2048
+sudo dd if=/dev/mmcblk2boot0 of=/root/tmp/imx-boot-sd.bin bs=512 skip=1 count=2048
+
+binwalk /root/tmp/imx-boot-sd.bin
+
+making image
+sudo tar -czf /root/tmp/debian_rootfs_backup_12_5_vcpp_3.tar.gz --one-file-system \
+--exclude=/root/tmp/* \
+--exclude=/proc/* \
+--exclude=/sys/* \
+--exclude=/dev/* \
+--exclude=/run/* \
+--exclude=/mnt/* \
+--exclude=/media/* \
+--exclude=/tmp/* \
+/
+
+sudo tar -czf - --one-file-system \
+--exclude=/root/tmp/* \
+--exclude=/home/x_user/client/voice_recognition/* \
+--exclude=/proc/* \
+--exclude=/sys/* \
+--exclude=/dev/* \
+--exclude=/run/* \
+--exclude=/mnt/* \
+--exclude=/media/* \
+--exclude=/tmp/* \
+/ | ssh ubuntu@109.95.85.186 'cat > debian_rootfs_backup_12_5.tar.gz'
+
+du -h --max-depth=1 /
+
+restore image
+mkdir /root/tmp
+mount /dev/sda /root/tmp
+for debian 11
+nano /usr/sbin/install_debian.sh
+
+for debian 12.5
+nano /usr/bin/install_debian.sh
+
+IMGS_PATH=/root/tmp
+ROOTFS_IMAGE=debian_rootfs_backup.tar.gz
+
+install_debian.sh
+################################################################################################
+pip install py-spy
+py-spy top --pid 
+sudo perf top --sort comm,dso
+################################################################################################
+
+linux-source-5.10.tar.xz
+tar -xvf linux-source-5.10.tar.xz -C /usr/src/
+################################################################################################
+https://github.com/varigit/linux-imx.git
+
+################################################################################################
+gpio set 9; gpio set 131; gpio set 154; gpio set 155; gpio set 21; gpio clear 70; gpio set 73; gpio set 86; gpio set 88; gpio set 89;   gpio set 120; run bsp_bootcmd
+
+debian_rootfs_backup_12_5_v3.tar.g
+
+
+Failed to load '/boot/boot.scr'
+Failed to load '/boot/uEnv.txt'   
+
+U-Boot SPL 2021.04-57597-gb932caa0ba (Sep 24 2023 - 17:15:56 +0200)
+SEC0:  RNG instantiated
+Normal Boot
+Trying to boot from BOOTROM
+image offset 0x8000, pagesize 0x200, ivt offset 0x0
+
+
+U-Boot 2021.04-57597-gb932caa0ba (Sep 24 2023 - 17:15:56 +0200)
+
+CPU:   i.MX8MP[8] rev1.1 1600 MHz (running at 1200 MHz)
+CPU:   Industrial temperature grade (-40C to 105C) at 50C
+Reset cause: POR
+Model: Variscite DART-MX8M-PLUS on DT8MCustomBoard 2.0 and above
+       Watchdog enabled
+DRAM:  4 GiB
+MMC:   FSL_SDHC: 1, FSL_SDHC: 2
+Loading Environment from MMC... *** Warning - bad CRC, using default environment
+
+In:    serial
+Out:   serial
+Err:   serial
+SEC0:  RNG instantiated
+
+ BuildInfo:
+  - ATF f9c1b47
+
+switch to partitions #0, OK
+mmc2(part 0) is current device
+
+Part number: VSM-DT8MP-304
+Assembly: AS202199289
+Production date: 2023 Mar 12
+Serial Number: f8:dc:7a:a8:89:74
+flash target is MMC:2
+Net:   eth0: ethernet@30bf0000 [PRIME]
+Fastboot: Normal
+Normal Boot
+Hit any key to stop autoboot:  
+
+imx8mp-var-dart-dt8mcustomboard.dtb
+
+dtc -I dtb -O dts -o imx8_kernel5_default.dts /boot/imx8mp-var-dart-dt8mcustomboard.dtb
+dtc -I dts -O dtb -o /boot/imx8mp-var-dart-dt8mcustomboard3.dtb imx8_kernel6_helmet3.dts
+dtc -I dtb -O dts -o imx8_kernel6_helmet.dts /boot/imx8mp-var-dart-dt8mcustomboard3.dtb
+dtc -I dts -O dtb -o /boot/imx8mp-var-dart-dt8mcustomboard3.dtb imx8_kernel5_default.dts
+dtc -I dts -O dtb -o /boot/imx8mp-var-dart-dt8mcustomboard33.dtb imx8_kernel6_helmet3.dts
+dtc -I dtb -O dts -o imx8_kernel5_helmet_load.dts /boot/imx8mp-var-dart-dt8mcustomboard2.dtb
+dtc -I dtb -O dts -o symphony_ov5640.dts /boot/imx8mp-var-som-1.x-symphony-2nd-ov5640.dtb
+
+
+dtc -I dts -O dtb -o /boot/imx8mp-var-dart-dt8mcustomboard3.dtb imx8_kernel6_helmet33.dts
+
+dtc -I dtb -O dts -o imx8_kernel6_default.dts /boot/imx8mp-var-dart-dt8mcustomboard.dtb
+
+g++ -o camera_c camera_c.cpp $(pkg-config --cflags --libs opencv4)
+g++ -o gtk_c gtk_c.cpp `pkg-config --cflags --libs gtkmm-3.0 gstreamermm-1.0`
+
+sudo pip3 install PyQt5==5.15.6 PyQt5-sip==12.9.0 PyQt5-Qt5==5.15.2
+sudo apt-get install qml-module-qtquick-controls qml-module-qtquick2
+export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/lib/aarch64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
+
+//gpio
+g++ -o main main.cpp -lgpiod
+//json files
+g++ -o main main.cpp -I/usr/include/jsoncpp -ljsoncpp
+//audio 
+g++ -o main main.cpp `pkg-config --cflags --libs gstreamer-1.0`
+//HTTPSession
+g++ -o main main.cpp -lcurl
+
+
+		
+		
+imx8mp-var-dart login: [   20.635152] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   21.645414] Bluetooth: MGMT ver 1.22
+[   21.656760] NET: Registered PF_ALG protocol family
+[   23.474601] gpio-mxc 30220000.gpio: Unbalanced pm_runtime_enable!
+[   23.480785] gpio-mxc 30220000.gpio: mxc_gpio_probe failed with errno -517
+[   23.488301] platform 30220000.gpio: deferred probe pending
+
+
+dd if=/root/tmp/dart-mx8m-plus-image-20241203.img.gz of=/dev/mmcblk2 bs=4M
+
+gst-launch-1.0 imxv4l2videosrc device=/dev/video0 !   videoconvert !   video/x-raw,format=RGB8P ! avenc_zmbv !   avmux_avi name=mux !  filesink location=output.avi
+
+gst-launch-1.0 imxv4l2videosrc device=/dev/video0 !   videoconvert !   video/x-raw,format=RGB8P !  avenc_zmbv !   video/x-zmbv,width=640,height=480,framerate=30/1 !  avimux !  filesink location=output.avi
+
+gst-launch-1.0 imxv4l2videosrc device=/dev/video0 ! videoconvert ! tee name=main_tee main_tee. ! queue ! videodiff ! videoconvert !  video/x-raw,format=I420 !   fakesink name=motion_sink signal-handoffs=true async=false main_tee. ! queue ! imxvpuenc_h264 bitrate=2000 ! h264parse ! splitmuxsink name=mux_sink location=motion-%04d.mp4 muxer=mp4mux
+//motion
+gst-launch-1.0 -e imxv4l2videosrc device=/dev/video0 !     videoconvert ! videoscale ! video/x-raw,width=640,height=480,framerate=15/1 ! tee name=main_tee main_tee. ! queue ! videodiff ! videoconvert ! video/x-raw,format=I420 ! identity drop-allocation=true ! videorate ! video/x-raw,framerate=1/1 ! fakesink name=motion_sink signal-handoffs=true async=false main_tee. ! queue ! imxvpuenc_h264 bitrate=2000 ! h264parse ! mp4mux ! filesink location=motion_detected.mp4
+
+//motion1
+gst-launch-1.0 -e imxv4l2videosrc device=/dev/video0 ! videoconvert ! videoscale ! video/x-raw,width=640,height=480,framerate=15/1 ! tee name=main_tee main_tee. ! queue ! videodiff ! videoconvert ! video/x-raw,format=I420  ! videobalance contrast=2.0 ! videorate ! video/x-raw,framerate=1/1 ! fakesink name=motion_sink signal-handoffs=true async=false main_tee. ! queue ! imxvpuenc_h264 bitrate=2000 ! h264parse ! mp4mux ! filesink location=motion_detected.mp4
+
+
+sudo XDG_RUNTIME_DIR=/run/user/0 DISPLAY=:0 QT_QPA_PLATFORM=eglfs GST_PLUGIN_PATH=/usr/lib/aarch64-linux-gnu/gstreamer-1.0/ /home/x_user/my_camera_project/my_camera_project
+
+{
+  "microphone_pipeline": "pulsesrc device=alsa_input.platform-sound-wm8904.stereo-fallback ! audioconvert ! audioresample ! audio/x-raw,format=S16LE,rate=16000,channels=1 ! volume volume=5.0 ! pulsesink device=alsa_output.platform-sound-wm8904.stereo-fallback",
+  "headphones_pipeline": "appsrc name=source format=time caps=audio/x-raw,format=S16LE,layout=interleaved,rate=16000,channels=1 ! queue ! audioconvert ! audioresample ! audio/x-raw,format=S16LE,rate=44100,channels=2 ! pulsesink device=alsa_output.platform-sound-wm8904.stereo-fallback"
+}
+
+gst-launch.exe directsoundsrc do-timestamp=1 ! audio/x-raw,channels=1,width=16,rate=8000 ! speexenc ! rtpspeexpay ! udpsink host=192.168.1.118 port=6000
+gst-launch-1.0 udpsrc port=6000 caps=\"application/x-rtp,clock-rate=8000\" ! rtpjitterbuffer drop-on-latency=True latency=100 ! rtpspeexdepay ! queue ! speexdec enh=false ! audioconvert !  audioresample ! audio/x-raw,format=S16LE,rate=44100,channels=2 ! pulsesink device=alsa_output.platform-sound-wm8904.stereo-fallback
