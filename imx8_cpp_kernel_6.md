@@ -391,7 +391,11 @@ sudo udevadm trigger
 
 ---
 
-### 23. Helmet Service Configuration
+### 23. X11 development library
+
+`sudo apt install libx11-dev `
+
+### 24. Helmet Service Configuration
 
 Edit `/root/.profile` and `/root/.bashrc`:
 
@@ -445,7 +449,7 @@ sudo systemctl restart helmet8cpp.service
 
 ---
 
-### 24. Network Scan Service
+### 25. Network Scan Service
 
 Create script `/root/startup_nmap_scan.sh`:
 
@@ -507,7 +511,7 @@ sudo systemctl start nmap_scan
 
 ---
 
-### 25. Power Monitoring
+### 26. Power Monitoring
 
 ```bash
 sudo apt install powertop
@@ -516,7 +520,7 @@ sudo powertop
 
 ---
 
-### 26. Boost Library
+### 27. Boost Library
 
 ```bash
 sudo apt-get install libboost-all-dev
@@ -524,7 +528,7 @@ sudo apt-get install libboost-all-dev
 
 ---
 
-### 27. Audio Control (Optional - NO NEED)
+### 28. Audio Control (Optional - NO NEED)
 
 ```bash
 sudo apt-get install pavucontrol
@@ -532,7 +536,7 @@ sudo apt-get install pavucontrol
 
 ---
 
-### 28. FFMPEG Build (NO NEED just attempt to replace the gstreamer)
+### 29. FFMPEG Build (NO NEED just attempt to replace the gstreamer)
 
 ```bash
 wget https://ffmpeg.org/releases/ffmpeg-5.1.6.tar.gz
@@ -552,7 +556,7 @@ source ~/.bashrc
 
 ---
 
-### 29. Perf Tool (Just need for developers)
+### 30. Perf Tool (Just need for developers)
 
 ```bash
 sudo apt install linux-perf
@@ -563,7 +567,7 @@ perf report
 
 ---
 
-### 30. PDF Generation (libharu) NO NEED
+### 31. PDF Generation (libharu) NO NEED
 
 ```bash
 sudo apt install libhpdf-dev libpng-dev build-essential zlib1g-dev fonts-dejavu
@@ -579,7 +583,7 @@ sudo ldconfig
 
 ---
 
-### 31. Update to Qt6 (NO NEED just attempt)
+### 32. Update to Qt6 (NO NEED just attempt)
 
 ```bash
 sudo apt install qt6-base-dev qt6-multimedia-dev
@@ -587,7 +591,7 @@ sudo apt install qt6-base-dev qt6-multimedia-dev
 
 ---
 
-### 32. GDB Debugger (Just need for developers)
+### 33. GDB Debugger (Just need for developers)
 
 ```bash
 sudo apt install gdb
@@ -619,7 +623,7 @@ QMAKE_LFLAGS += -fsanitize=address
 
 ---
 
-### 33. QMediaPlayer + GStreamer (NO NEED just attempt)
+### 34. QMediaPlayer + GStreamer (NO NEED just attempt)
 
 Update sources list:
 
@@ -644,7 +648,7 @@ Environment="GST_PLUGIN_FEATURE_RANK=vpudec:256"
 
 ---
 
-### 34. Touch All Files Before Rebuild (sometimes you can not compile the project)
+### 35. Touch All Files Before Rebuild (sometimes you can not compile the project)
 
 ```bash
 find . -exec touch {} \;
@@ -652,13 +656,13 @@ find . -exec touch {} \;
 
 ---
 
-### 35. WiFi Connection History (NO NEED just command)
+### 36. WiFi Connection History (NO NEED just command)
 
 ```bash
 nmcli connection show | grep wifi
 ```
 
-### 36. Bulid the project
+### 37. Bulid the project
 
 #### Directory rules
 
