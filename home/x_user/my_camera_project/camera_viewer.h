@@ -133,7 +133,7 @@ public:
     void stop_qrcode();
     std::string base64_decode_openssl(const std::string &encoded);
     std::string aes_decrypt_ecb(const std::string &cipherText, const std::string &key);
-    std::string removePadding(const std::string &input, const std::string &padding);
+    std::string removePadding(const std::string &input, const std::string &padding);    
     void processQRCode(cv::Mat _frame);
     void batteryiconchange(PowerManagement::BatteryStatus _status);
     void complete_standalone_transition(bool _NOWIFI);
@@ -151,9 +151,9 @@ private slots:
     void handleIMUClassification(const QString& label);
 
 private:
-    QGraphicsScene *videoScene, *videoScene1;
-    QGraphicsPixmapItem *videoPixmapItem, *videoPixmapItem1;
-    QGraphicsView *videoView, *videoView1;
+    QGraphicsScene *videoScene, *videoScene1, *videoScene2;
+    QGraphicsPixmapItem *videoPixmapItem, *videoPixmapItem1, *videoPixmapItem2;
+    QGraphicsView *videoView, *videoView1, *videoView2;
     QLabel *avatarLabel;
     QLabel *wifiLabel;
     QLabel *batteryLabel;
@@ -200,7 +200,7 @@ private:
     cv::Mat cropped_image_scaled;
     cv::Mat gray_img;
     zbar::ImageScanner scanner;
-    QPixmap pixmap;
+    QPixmap pixmap, pixmap1;
     QImage image;
     PDFCreator pdf;
     std::vector<std::string> pdfFiles;
@@ -214,7 +214,7 @@ private:
     cv::Point bottom_right;
     int Swidth, Sheight;
     std::mutex battery_mutex;
-    int old_values[4];
+    int old_values[4] = {5000,25,1024,768};
     QSlider *headphoneSlider;
     QSlider *captureSlider;
     QLabel *captureInputLabel;
@@ -228,7 +228,7 @@ private:
     bool standalone_language_transition = false;
     bool camera_rotate = false;
     bool task_sharing = false;
-    // bool screenshot = false;
+    bool screenshot = false;
     int currentTaskIndex = 0;
     bool _pause_stream = false;
     int scenaraio = 0;

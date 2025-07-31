@@ -75,8 +75,8 @@ class Configuration {
         int bitrate;
         int speriod;
         std::string camera_device;    
-        int maintab;   
-        int rotate;   
+        int maintab;  
+        int rotate;    
         int font_size;    
         std::string todo;
         // std::string vosk_model;
@@ -84,6 +84,7 @@ class Configuration {
         int debug;
         int level;
         int testbench;
+        int streaming_codex;
         std::string script_gps;
         std::string script_vpn;
         int width;
@@ -91,7 +92,9 @@ class Configuration {
         int swidth;
         int sheight;
         std::string _vl_loopback;
+        std::string _vl_loopback_small;
         std::string snapshot_pipeline;
+        std::string snapshot_file;
         std::string _vs_streaming;
         std::string _vs_streaming_original;
         std::string _vp_remote;
@@ -204,6 +207,7 @@ class Configuration {
                 debug = config["debug"].asInt();
                 level = config["level"].asInt();
                 testbench = config["testbench"].asInt();
+                streaming_codex = config["streaming_codex"].asInt();
                 script_gps = config["script_gps"].asString();
                 script_vpn = config["script_vpn"].asString();
                 width = config["width"].asInt();
@@ -211,27 +215,48 @@ class Configuration {
                 swidth = config["swidth"].asInt();
                 sheight = config["sheight"].asInt();
 
-                // sets loopback pipeline
-                int fps = 1000/period;
+                // sets loopback pipeline 
+                int fps = 15;
+                if (period == 0)
+                    fps = 30;
+                else if (period == 1)
+                    fps = 15;
+                period = fps;
+                // std::cout << "period : " << period  << std::endl;
                 _vl_loopback = config["pipelines"]["_vl_loopback"].asString();
                 _vl_loopback = replacePlaceholder(_vl_loopback, "$video", camera_device);
                 _vl_loopback = replacePlaceholder(_vl_loopback, "$Width", std::to_string(width));
                 _vl_loopback = replacePlaceholder(_vl_loopback, "$Height", std::to_string(height));
-                _vl_loopback = replacePlaceholder(_vl_loopback, "$FPS", std::to_string(fps));
-                
+                // std::cout << "_vl_loopback : " << _vl_loopback  << std::endl;
+                // sets small loopback pipeline
+                _vl_loopback_small = config["pipelines"]["_vl_loopback_small"].asString();
+                _vl_loopback_small = replacePlaceholder(_vl_loopback_small, "$video", camera_device);
+
                 // sets snapshot pipeline
                 snapshot_pipeline = config["pipelines"]["snapshot_pipeline"].asString();
                 snapshot_pipeline = replacePlaceholder(snapshot_pipeline, "$video", camera_device);
                 snapshot_pipeline = replacePlaceholder(snapshot_pipeline, "$Width", std::to_string(width));
                 snapshot_pipeline = replacePlaceholder(snapshot_pipeline, "$Height", std::to_string(height));
 
+                // sets snapshot file
+                snapshot_file = config["pipelines"]["snapshot_file"].asString();
+
                 // sets streaming pipeline
-                fps = 1000/speriod;
-                _vs_streaming_original = config["pipelines"]["_vs_streaming"].asString();
+                if (speriod == 0)
+                    fps = 25;
+                else if (speriod == 1)
+                    fps = 15;
+                speriod = fps;
+                // std::cout << "speriod : " << speriod  << std::endl;
+                if (streaming_codex == 0)
+                    _vs_streaming_original = config["pipelines"]["_vs_streaming"].asString();
+                else if (streaming_codex == 1)
+                    _vs_streaming_original = config["pipelines"]["_vs_streaming_265"].asString();
                 _vs_streaming = replacePlaceholder(_vs_streaming_original, "$Width", std::to_string(swidth));
                 _vs_streaming = replacePlaceholder(_vs_streaming, "$Height", std::to_string(sheight));
                 _vs_streaming = replacePlaceholder(_vs_streaming, "$FPS", std::to_string(fps));
                 _vs_streaming = replacePlaceholder(_vs_streaming, "$bitrate", std::to_string(bitrate));
+                // std::cout << "_vs_streaming : " << _vs_streaming  << std::endl;
 
                 // sets remote pipeline
                 _vp_remote = config["pipelines"]["_vp_remote"].asString();

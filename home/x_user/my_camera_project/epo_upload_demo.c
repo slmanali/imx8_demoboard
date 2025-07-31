@@ -125,7 +125,7 @@ void gnss_epo_flash_aiding(gnss_epo_mode_t type)
     gnss_epo_data_t data;
     uint8_t buffer[100];
     uint8_t temp_buffer[GNSS_EPO_DATA_SIZE];
-    const char* file_name = "home/x_user/my_camera_project/MTK14.EPO";
+    const char* file_name = "/home/user/MTK14.EPO";
     uint8_t payload_type = 'G';
     int16_t length = 0;
 

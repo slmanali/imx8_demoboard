@@ -20,7 +20,7 @@ volatile std::sig_atomic_t gSignalStatus = 0;
 
 void signal_handler(int signal) {
   gSignalStatus = signal;
-  qApp->quit();  // Terminate the Qt event loop
+   qApp->quit();  // Terminate the Qt event loop
 }
 
 int main(int argc, char *argv[]) {

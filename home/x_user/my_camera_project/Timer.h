@@ -22,10 +22,10 @@ public:
                         std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms));
                     }
                     else if (_type == 2){
-                        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms/4));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms));
                     }
                     else if (_type == 1){
-                        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms/5));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms/4));
                     }
                     if (running) {
                         callback();

@@ -6,8 +6,8 @@
             "call":"3-CALL",
             "setup":"4-SETUP",                    
             "next": "1-NEXT",
-            "previous": "2-BACK", 
-            "close": "3-CLOSE", 
+            "previous": "2-BACK",
+            "close": "3-CLOSE",
             "wifi":"1-Turn on WIFI",
             "exit":"1-EXIT",
             "camera":"3-CAMERA",
@@ -29,7 +29,7 @@
         "Navigationtab":[
             "1 - DOCUMENT", 
             "2 - TASK", 
-            "3 - VIDEO", 
+            "3 - VIDEO",
             "4 - LANGS",
             "5 - AUDIO",
             "6 - EXIT"
@@ -72,7 +72,8 @@
             "louder":"LOUD",
             "silent":"CALM",
             "close": "EXIT",
-            "quit": "CLOSE"            
+            "quit": "CLOSE",
+            "snapshot": "SNAPSHOT"
         },
         "languagestab":{
             "arabic":"ARABIC",
@@ -95,7 +96,7 @@
         "grammar": [ "close", "zoom in", "zoom out", "next", "back", "up", "down", "right", "left", "task", "document", "exit",
                     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
                     "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "help", "video", "play", "stop", "pause", "loud", "calm", "lang",
-                    "helmet", "turn", "standalone", "call", "setup", "arabic", "russian", "english", "audio", "volume", "reset", "microphone", "camera"],
+                    "helmet", "turn", "standalone", "call", "setup", "arabic", "russian", "english", "audio", "volume", "reset", "microphone", "camera", "snapshot"],
         "vosk_model": "vosk-model-small-en-us-0.15",
         "error_message":{
             "NOWIFI":"WIFI DISABLED",
@@ -127,7 +128,7 @@
             "next": "1-ДАЛЬШЕ",
             "previous": "2-НАЗАД",
             "close": "3-ЗАВЕРШИТЬ",
-            "wifi":"1-ВКЛЮЧИWIFI",
+            "wifi":"1-ВКЛЮЧИ WIFI",
             "exit":"1-ВЫХОД",
             "camera":"3-КАМЕРА",
             "call_status":"ВЫЗОВ",  
@@ -191,7 +192,8 @@
             "louder":"ГРОМЧЕ",
             "silent":"ТИШЕ",
             "close": "ЗАВЕРШИТЬ",
-            "quit": "ЗАКРЫТЬ"            
+            "quit": "ЗАКРЫТЬ",
+            "snapshot": "СНИМОК"            
         },
         "languagestab":{
             "arabic":"АРАБСКИЙ",
@@ -214,7 +216,7 @@
         "grammar": [ "закрыть", "увеличить", "уменьшить", "дальше", "назад","вверх", "опустить", "вправо", "влево", "задачи", "документ", "завершить",
               "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", 
               "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать", "двадцать", "помощь", "вай-фай", "видео", "запустить", "остановить", "пауза", "громче", "тише", "языки",
-              "шлем", "включи", "выход", "офлайн", "вызов", "настройка", "арабский", "английский", "русский", "звук", "сброс", "аудио", "микрофон","камера"],
+              "шлем", "включи", "выход", "офлайн", "вызов", "настройка", "арабский", "английский", "русский", "звук", "сброс", "аудио", "микрофон","камера", "снимок"],
         "vosk_model": "/home/x_user/my_camera_project/vosk-model-small-ru-0.22",
         "error_message":{
             "NOWIFI":"WIFI ОТКЛЮЧЕН",
@@ -309,8 +311,9 @@
             "louder":"أقوى",
             "silent":"أضعف",
             "close": "خروج",
-            "quit": "إغلاق"            
-        },               
+            "quit": "إغلاق",
+            "snapshot": "لقطة"            
+        },        
         "languagestab":{
             "russian":"روسي",
             "english": "إنكليزي",
@@ -323,7 +326,7 @@
             "Capturesilent":"ميكروفون أضعف",
             "AudioReset":"ضبط الصوت",
             "quit": "إغلاق"  
-    },
+        }, 
         "audiotab":{
             "headphonename":"مستوى السماعات",
             "Capturename":"مستوى الميكروفون",
@@ -332,7 +335,7 @@
         "grammar": [ "إغلاق", "تكبير", "تصغير", "التالي", "السابق","أعلى", "تحت", "يمين", "يسار", "المهام", "وثائق", "خروج",
               "واحد", "اثنين", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة", "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", 
               "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر", "عشرين", "مساعدة", "الشبكة", "فيديو", "تشغيل", "توقف", "انتظار", "أقوى", "أضعف", "لغة",
-              "خوذة", "مستقل", "اتصال", "إعداد", "روسي", "إنكليزي", "عربي", "الصوت", "خرج", "ضبط", "ميكروفون", "كاميرا"],
+              "خوذة", "مستقل", "اتصال", "إعداد", "روسي", "إنكليزي", "عربي", "الصوت", "خرج", "ضبط", "ميكروفون", "كاميرا", "لقطة"],
         "vosk_model": "/home/x_user/my_camera_project/vosk-model-small-ar-0.3",
         "error_message":{
             "NOWIFI":"تم تعطيل الشبكة",

@@ -24,7 +24,7 @@
 class Camerareader {
 public:
     Camerareader(const std::string& _camera_pipeline, int _debug=1) :  camera_pipeline(_camera_pipeline) , frameCount(0), debugg(_debug), 
-    lastResetTime(QTime::currentTime()), period(40) {
+    lastResetTime(QTime::currentTime()), period(33) {
         LOG_INFO("Camerareader Constructor");
     }
 
@@ -75,8 +75,6 @@ public:
 
     int startstream(std::string _stream_pipeline, int _fps, int _width, int _height) {
         try{
-            timer.stop();
-            timer.start(period, 1, [this]() { CaptureFrame(); });
             scap.open(_stream_pipeline, 0, _fps, cv::Size(_width, _height), true);
             if (!scap.isOpened()) {
                 LOG_ERROR("Error: Could not open the streaming pipline.");
@@ -94,18 +92,16 @@ public:
     }  
     
     void stopstream() {
-        if (stream) {
-            timer.stop();
-            timer.start(period, 0, [this]() { CaptureFrame(); });
+        if (stream) {            
             stream = false;
             stopStreamingThread();
-            cv::Mat* frame;
-            while (streamQueue.pop(frame)) {
-                if (frame && !frame->empty() && scap.isOpened()) {
-                    scap.write(*frame);
-                }
-                delete frame; // Clean up each frame
-            }
+            // cv::Mat* frame;
+            // while (streamQueue.pop(frame)) {
+            //     if (frame && !frame->empty() && scap.isOpened()) {
+            //         scap.write(*frame);
+            //     }
+            //     delete frame; // Clean up each frame
+            // }
             scap.release();
         }
     }
@@ -155,7 +151,7 @@ public:
                 if (error) g_error_free(error);
                 return false;
             }
-    
+
             gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
             // Wait for EOS or error (should finish after 1 buffer)
@@ -188,6 +184,25 @@ public:
         }
     }
 
+    bool takeSnapshot(const std::string& filename) {
+        try{
+            cv::Mat snapshot;
+            if (frame.channels() == 2) {
+                cvtColor(frame, snapshot, cv::COLOR_YUV2BGR_YUY2);
+                cv::resize(snapshot, snapshot, cv::Size(640,480), 0, 0, cv::INTER_NEAREST);
+                cv::imwrite(filename, snapshot);
+            }            
+            else {
+                cv::resize(frame, snapshot, cv::Size(640,480), 0, 0, cv::INTER_NEAREST);
+                cv::imwrite(filename, snapshot);
+            }
+            return true;
+        } catch (const std::exception& e) {
+            LOG_ERROR("An error occurred in Camerareader startremote: " + std::string(e.what()));
+            return false;
+        }
+    }
+
 private:
     std::string camera_pipeline;
     Timer timer;
@@ -205,51 +220,17 @@ private:
     bool stream = false;
     bool remote = false;
     // Streaming thread support
-    boost::lockfree::queue<cv::Mat*, boost::lockfree::capacity<100>> streamQueue;
+    boost::lockfree::queue<cv::Mat*, boost::lockfree::capacity<20>> streamQueue;
     std::thread streamThread;
     bool streamRunning = false;
 
     void CaptureFrame() {
-        if (cap.isOpened()) {
-
-            // QTime currentTime = QTime::currentTime();
-            // int elapsedMs = lastResetTime.msecsTo(currentTime);
-            // if (elapsedMs >= 1000) {
-            //     if (stream) {
-            //         std::cout << "Stream" << std::endl;
-            //     }
-            //     if (remote) {
-            //         std::cout << "Remote" << std::endl;
-            //     }
-            //     std::cout << "Capture frame rate:" << frameCount << "fps" << std::endl;
-            //     frameCount = 0;
-            //     lastResetTime = currentTime;
-            // }
-            // Total duration timers
-            // QElapsedTimer qtTotalTimer;
-            // qtTotalTimer.start();
-            // auto chronoStart = std::chrono::high_resolution_clock::now();
-
-            // Checkpoint 1: read the frame
-            // QElapsedTimer qtCheckpoint;
-            // qtCheckpoint.start();
-            // auto chronoCheckpoint = std::chrono::high_resolution_clock::now();
-
+        if (cap.isOpened()) {          
             cap.read(frame);
-
-            // qint64 qtreadframe = qtCheckpoint.elapsed();
-            // auto chronoreadframe = std::chrono::duration_cast<std::chrono::milliseconds>(
-            // std::chrono::high_resolution_clock::now() - chronoCheckpoint).count();
-            // std::cout << "Checkpoint 1 - read the frame:" << qtreadframe << "ms, Chrono:" << chronoreadframe << "ms"<< std::endl;
-
-            // Checkpoint 2: YUY2 to RGB conversion
-            // qtCheckpoint.restart();
-            // chronoCheckpoint = std::chrono::high_resolution_clock::now();
-
             if (frame.channels() == 2) {
                 cvtColor(frame, frame, cv::COLOR_YUV2BGR_YUY2);
             }
-
+            
             if (debugg == 1) {
                 frameCount++;    
                 std::string text = std::to_string(frameCount);
@@ -263,24 +244,9 @@ private:
                 // 3. Put Text on the Image
                 cv::putText(frame, text, org, fontFace, fontScale, color, thickness, lineType);
             }
-            // qint64 qtconversion = qtCheckpoint.elapsed();
-            // auto chronoconversion = std::chrono::duration_cast<std::chrono::milliseconds>(
-            // std::chrono::high_resolution_clock::now() - chronoCheckpoint).count();
-            // std::cout << "Checkpoint 2 - YUY2 to RGB conversion:" << qtconversion << "ms, Chrono:" << chronoconversion << "ms"<< std::endl;
             
             if (!frame.empty()) {
-                // Clone the frame once
-                // auto framePtr = std::shared_ptr<cv::Mat>(&frame, [](cv::Mat*){}); // Share without cloning
-                // Checkpoint 3: Cloning the frame
-                // qtCheckpoint.restart();
-                // chronoCheckpoint = std::chrono::high_resolution_clock::now();
-
                 cv::Mat* framePtr = new cv::Mat(frame); // Clone and store as raw pointer
-
-                // qint64 qtCloning = qtCheckpoint.elapsed();
-                // auto chronoCloning = std::chrono::duration_cast<std::chrono::milliseconds>(
-                // std::chrono::high_resolution_clock::now() - chronoCheckpoint).count();
-                // std::cout << "Checkpoint 3- Cloning the frame:" << qtCloning << "ms, Chrono:" << chronoCloning << "ms"<< std::endl;
                 if (Frame_callback) {
                     if (remote) {
                         CaptureRemoteFrame();
@@ -288,19 +254,6 @@ private:
                         Frame_callback(*framePtr);
                     }                  
                 }
-                // Log total duration
-                // qint64 qtTotalDuration = qtTotalTimer.elapsed();
-                // auto chronoTotalDuration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                //     std::chrono::high_resolution_clock::now() - chronoStart).count();
-                // std::cout << "Total onNewSample duration: Qt:" << qtTotalDuration << "ms, Chrono:" << chronoTotalDuration << "ms"<< std::endl;
-                // if (scap.isOpened() && stream) {
-                //     cv::Size target_size(swidth, sheight);
-                //     if (frameCopy.size() != target_size) {
-                //         cv::resize(frameCopy, frameCopy, target_size, 0, 0, cv::INTER_NEAREST);
-                //     }
-                //     scap.write(frameCopy);
-                // }
-                // If streaming is enabled, push the frame to the queue
                 if (stream) {
                     cv::Mat* resizedFramePtr = new cv::Mat();
                     cv::Size target_size(swidth, sheight);
@@ -325,16 +278,26 @@ private:
     void startStreamingThread() {
         streamRunning = true;
         streamThread = std::thread([this]() {
+            const int target_fps = 25;
+            const auto frame_period = std::chrono::milliseconds(1000 / target_fps);
+            auto next_frame_time = std::chrono::steady_clock::now();
+
             while (streamRunning) {
-                cv::Mat* frameToStream;
-                if (streamQueue.pop(frameToStream)) {
-                    if (frameToStream && !frameToStream->empty() && scap.isOpened()) {
-                        scap.write(*frameToStream);
-                        delete frameToStream; // Clean up after writing
-                    }
-                } else {
-                    std::this_thread::sleep_for(std::chrono::microseconds(10)); // Brief wait
+                cv::Mat* frameToStream = nullptr;
+                cv::Mat* lastFrame = nullptr;
+
+                // Always get the latest frame available
+                while (streamQueue.pop(frameToStream)) {
+                    if (lastFrame) delete lastFrame; // Drop previously stored frame
+                    lastFrame = frameToStream;       // Keep newest frame
                 }
+                if (lastFrame && !lastFrame->empty() && scap.isOpened()) {
+                    scap.write(*lastFrame);
+                    delete lastFrame;
+                }
+                // Sleep until next 40ms interval
+                next_frame_time += frame_period;
+                std::this_thread::sleep_until(next_frame_time);
             }
         });
     }

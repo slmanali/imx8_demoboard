@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 
 class HTTPSession {
 public:
-    
+
     struct GPSData {
             double lat;
             double lng;
@@ -64,7 +64,7 @@ public:
                     return true;
                 }
                 else {
-                    if (i == 4){
+                    if (i == 4) {
                         set_system_time(new_time);
                         return false;
                     }
@@ -75,7 +75,7 @@ public:
             return false;
         } catch (const std::exception& e) {
             LOG_ERROR("Warning: Something went wrong while authenticating: " + std::string(e.what()));
-			return false;
+            return false;
         }
     }
 
@@ -128,7 +128,7 @@ public:
                     if (response_code == 200) {
                         LOG_INFO("[WIFI] HTTP traffic ok");
                         return true;
-                    }                
+                    }
             }
             return false;
         } catch (const std::exception& e) {
@@ -555,7 +555,7 @@ private:
                 LOG_ERROR("CURL session is not initialized");
                 throw std::runtime_error("CURL session is not initialized");
             }
-    
+
             // Open file if output path is provided
             if (!output_file.empty()) {
                 file = fopen(output_file.c_str(), "wb");
@@ -584,13 +584,13 @@ private:
                 curl_easy_setopt(session, CURLOPT_TCP_KEEPALIVE, 1L);  // Enable TCP keep-alive
                 curl_easy_setopt(session, CURLOPT_TCP_KEEPIDLE, 30L);  // Idle time before sending keep-alive
                 curl_easy_setopt(session, CURLOPT_TCP_KEEPINTVL, 15L); // Interval between keep-alive probes
-    
+
                 struct curl_slist* headers = nullptr;
                 std::string header_str = "X-Api-Key: " + api_key + "\r\nHost: mydigitalhelmet.com";
                 headers = curl_slist_append(headers, header_str.c_str());
                 curl_easy_setopt(session, CURLOPT_HTTPHEADER, headers);
                 LOG_INFO("Sending GET request to: " + url);
-    
+
                 CURLcode res = curl_easy_perform(session);
                 if (res != CURLE_OK) {
                     LOG_ERROR("CURL failed with error: " + std::string(curl_easy_strerror(res)));
@@ -821,7 +821,7 @@ private:
     }
 
     void update_status() {
-        try {
+        try {            
             std::string _status = "";
             readGPS();
             current_status = readIMUStatus();
@@ -862,7 +862,7 @@ private:
                                 else if (Remote_IP != data["call_details"]["ipv4"]) {
                                     Remote_IP = data["call_details"]["ipv4"];
                                     LOG_INFO("Desktop Client IP: " + Remote_IP);
-                                }                         
+                                }                                                       
                             }
                             if (update_status_callback) {                                                               
                                 helmet_status = operator_status + "_active";  
@@ -871,18 +871,19 @@ private:
                             }               
                         }
                         else {
-                            helmet_status = operator_status + "_standby";
+                            // LOG_INFO(data["helmet_status"]); 
+                            helmet_status = data["helmet_status"];
                             LOG_INFO(helmet_status); 
                             if (update_status_callback) {                      
                                 update_status_callback(data, "standby");
                             }                    
                         }                                            
-                    } 
-                }                     
-                else{
+                    }
+                }
+                else {
                     LOG_INFO(data["helmet_status"]);
                     // update_helmet_status(data["helmet_status"]);
-                }
+                }                      
             }
         } catch (const std::exception& e) {
             LOG_ERROR("Something went wrong update_status: " + std::string(e.what()));            

@@ -53,7 +53,7 @@ public:
         // Stop GStreamer pipeline first
         if (pipeline) {
         gst_element_set_state(pipeline, GST_STATE_NULL);
-    }
+        }
 
         // Join timeout thread
         if (timeout_thread.joinable()) {
@@ -133,7 +133,7 @@ private:
                 last_audio_time = std::chrono::system_clock::now();
                 
                 if (vosk_recognizer_accept_waveform(rec, 
-                    reinterpret_cast<const char*>(map.data), map.size)) {
+                    reinterpret_cast<const char*>(map.data), map.size)) { 
                     process_final_result();
                 }
                 gst_buffer_unmap(buffer, &map);
@@ -149,13 +149,13 @@ private:
 
     void timeout_checker() {
         try {
-            while (!stop) {
-                auto now = std::chrono::system_clock::now();
+        while (!stop) {
+            auto now = std::chrono::system_clock::now();
                 auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
                     now - last_audio_time).count();
 
                 if (elapsed >= timeout_seconds) {
-                    force_final_result();
+                force_final_result();
                     last_audio_time = now;
                 }
                 std::this_thread::sleep_for(std::chrono::seconds(1));

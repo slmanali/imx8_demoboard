@@ -42,28 +42,28 @@ public:
     PowerManagement(Configuration& _config) 
         : config(_config), stop_thread(false), REPEAT_INIT(2), current_counter(1),
         last_log_time(std::chrono::steady_clock::now() - std::chrono::minutes(1)) {
-        if (config.testbench == 0){
-            LOG_INFO("PowerManagement Constructor");
-            std::ifstream log_file(config.LOG_BOOK_FILE_PATH);
-            if (log_file.is_open()) {
-                std::string line, last_line;
-                while (std::getline(log_file, line)) {
-                    if (!line.empty()) last_line = line;
-                }
-                if (!last_line.empty()) {
-                    std::istringstream iss(last_line);
-                    std::string token;
-                    if (std::getline(iss, token, ',')) {
-                        try {
-                            current_counter = std::stoi(token) + 1;
-                        } catch (const std::exception& e) {
-                            LOG_ERROR("Failed to parse counter: " + std::string(e.what()));
+            if (config.testbench == 0){
+                LOG_INFO("PowerManagement Constructor");
+                std::ifstream log_file(config.LOG_BOOK_FILE_PATH);
+                if (log_file.is_open()) {
+                    std::string line, last_line;
+                    while (std::getline(log_file, line)) {
+                        if (!line.empty()) last_line = line;
+                    }
+                    if (!last_line.empty()) {
+                        std::istringstream iss(last_line);
+                        std::string token;
+                        if (std::getline(iss, token, ',')) {
+                            try {
+                                current_counter = std::stoi(token) + 1;
+                            } catch (const std::exception& e) {
+                                LOG_ERROR("Failed to parse counter: " + std::string(e.what()));
+                            }
                         }
                     }
+                    log_file.close();
                 }
-                log_file.close();
             }
-        }
     }
 
     // Destructor

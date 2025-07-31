@@ -370,6 +370,8 @@ sudo killall wpa_supplicant
 ### Run Python Gunicorn server
 
 ```bash
+sudo systemctl stop smarthelmet.service 
+cd /home/ubuntu/Server/
 /home/ubuntu/venv/bin/python3 /home/ubuntu/venv/bin/gunicorn --bind 0.0.0.0:5000 wsgi --workers 1
 ```
 

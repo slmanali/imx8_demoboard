@@ -15,7 +15,7 @@ public:
     ~Videocontroller(){
         LOG_INFO("Videocontroller Destructor");
         stopPlaying();
-        releasecamera();
+        releasevideo();
     }
 
     void update_video_path(const std::string& _video_path) {
@@ -25,7 +25,7 @@ public:
 
     int init() {
         try {
-            // gst_init(nullptr, nullptr);
+            gst_init(nullptr, nullptr);
             // Open video with OpenCV
             cap.open(video_path);
             if (!cap.isOpened()) {
@@ -39,17 +39,14 @@ public:
                 fps = 25; // Default if FPS retrieval fails
             }
             int interval = static_cast<int>(1000 / fps);
-            timer.start(interval, 2, [this]() { PlayFrame(); });
-
-            // Start audio playback
-            gst_element_set_state(pipeline, GST_STATE_PLAYING);
+            timer.start(interval, 2, [this]() { PlayFrame(); });            
             isStop = false;
             isPause = false;
             
             // Set up GStreamer pipeline for audio only
             std::string audioPipelineDesc =
                 "filesrc location=\"" + video_path + "\" ! decodebin name=d "
-                "d. ! queue ! audioconvert ! audioresample ! volume name=vol volume=0.35 ! autoaudiosink";
+                "d. ! queue ! audioconvert ! audioresample ! volume name=vol volume=0.35 ! pulsesink device=alsa_output.platform-sound-wm8904.stereo-fallback";
 
             pipeline = gst_parse_launch(audioPipelineDesc.c_str(), nullptr);
             if (!pipeline) {
@@ -57,10 +54,9 @@ public:
                 cap.release();
                 return -1;
             }
-
-            volumeElement = gst_bin_get_by_name(GST_BIN(pipeline), "vol");
-
-            
+            volumeElement = gst_bin_get_by_name(GST_BIN(pipeline), "vol");        
+            // Start audio playback
+            gst_element_set_state(pipeline, GST_STATE_PLAYING);    
             return 0;
         } catch (const std::exception& e) {
             LOG_ERROR("Videocontroller init error: " + std::string(e.what()));
@@ -91,7 +87,7 @@ public:
         isPause = true;
     }
 
-    void releasecamera() {
+    void releasevideo() {
         timer.stop();
         isStop = true;
         isPause = true;

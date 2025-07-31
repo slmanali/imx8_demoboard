@@ -50,12 +50,8 @@ for file in "${FILES[@]}"; do
         fi
     fi
 done
-#enable visors power and start visors
-gpioset gpiochip4 3=1
-sleep  2
-gpioset gpiochip3 24=1
-#sleep 0.5
-systemctl restart weston
+# before make clean and make 
+# run this find . -exec touch {} \;
 # Now launch the Qt application
 cd /home/x_user/my_camera_project
 ./my_camera_project

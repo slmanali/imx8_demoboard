@@ -39,10 +39,13 @@ CameraViewer::CameraViewer(QWidget *parent)
     : QWidget(parent), 
     videoScene(new QGraphicsScene(this)),
     videoScene1(new QGraphicsScene(this)),
+    videoScene2(new QGraphicsScene(this)),
     videoPixmapItem(new QGraphicsPixmapItem()),
     videoPixmapItem1(new QGraphicsPixmapItem()),
+    videoPixmapItem2(new QGraphicsPixmapItem()),
     videoView(new PdfView(videoScene, this)),
     videoView1(new PdfView(videoScene1, this)),
+    videoView2(new PdfView(videoScene2, this)),
     avatarLabel(new QLabel(this)),  
     wifiLabel(new QLabel(this)),  
     batteryLabel(new QLabel(this)),
@@ -124,6 +127,7 @@ CameraViewer::CameraViewer(QWidget *parent)
         videoView->setRenderHint(QPainter::SmoothPixmapTransform, false);
         videoView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         videoView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        videoView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);     
         //video tab
         videoScene1->addItem(videoPixmapItem1);
         videoView1->setFrameStyle(QFrame::NoFrame);
@@ -131,8 +135,17 @@ CameraViewer::CameraViewer(QWidget *parent)
         videoView1->setRenderHint(QPainter::SmoothPixmapTransform, false);
         videoView1->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         videoView1->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        //document tab
-        view->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);       
+        videoView1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);     
+        //Content tab (Task + camera + document)
+        view->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);  
+        videoScene2->addItem(videoPixmapItem2);
+        videoView2->setFrameStyle(QFrame::NoFrame);
+        videoView2->setRenderHint(QPainter::Antialiasing, false);
+        videoView2->setRenderHint(QPainter::SmoothPixmapTransform, false);
+        videoView2->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        videoView2->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        videoView2->setFixedSize(320, 240);
+        // videoView2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);     
 
         stackedWidget->addWidget(createFirstTab());
         stackedWidget->addWidget(createNavigationWidget());
@@ -208,18 +221,18 @@ CameraViewer::CameraViewer(QWidget *parent)
                 imuThread->start_IMU(config.status_update);
             }
 
-        pm.set_battery_status_callback([this](PowerManagement::BatteryStatus status) {
-            QMetaObject::invokeMethod(this, [this, status]() {
-                this->batteryiconchange(status);
-            }, Qt::QueuedConnection);
-        });
-        pm.start_updates();
+            pm.set_battery_status_callback([this](PowerManagement::BatteryStatus status) {
+                QMetaObject::invokeMethod(this, [this, status]() {
+                    this->batteryiconchange(status);
+                }, Qt::QueuedConnection);
+            });
+            pm.start_updates();
 
-            std::string chmod_cmd = "chmod +x " + config.script_gps;
-            system(chmod_cmd.c_str());
+            // std::string chmod_cmd = "chmod +x " + config.script_gps;
+            // system(chmod_cmd.c_str());
 
-            std::string command = "sudo " + config.script_gps;
-            system(command.c_str());
+            // std::string command = "sudo " + config.script_gps;
+            // system(command.c_str());
         }
         AudioReset();
     } catch (const std::exception& e) {
@@ -228,9 +241,17 @@ CameraViewer::CameraViewer(QWidget *parent)
 }
 
 CameraViewer::~CameraViewer() {       
+    if (videoPixmapItem) {
+        delete videoPixmapItem;
+        videoPixmapItem = nullptr;
+    }
     if (videoPixmapItem1) {
         delete videoPixmapItem1;
         videoPixmapItem1 = nullptr;
+    }
+    if (videoPixmapItem2) {
+        delete videoPixmapItem2;
+        videoPixmapItem2 = nullptr;
     }
     if (document)
         delete document;
@@ -241,6 +262,8 @@ CameraViewer::~CameraViewer() {
     delete videoScene;
     delete videoView1;
     delete videoScene1;
+    delete videoView2;
+    delete videoScene2;
 }
 
 QWidget* CameraViewer::createFirstTab() {
@@ -367,7 +390,7 @@ QWidget* CameraViewer::createFirstTab() {
         legend_label3->setStyleSheet("QLabel { color : green; font-weight: bold;}");        
         status_label->setFont([](int size) { QFont font; font.setPointSize(size); return font; }(config.font_size));
         status_label->setText(QString::fromStdString(lang.getText("defaulttab","setup")));
-        status_label->setStyleSheet("QLabel { color : green; font-weight: bold;}");
+        status_label->setStyleSheet("QLabel { color : green; font-weight: bold;}");               
         user_label->setFont([](int size) { QFont font; font.setPointSize(size); return font; }(config.font_size));
         user_label->setStyleSheet("QLabel { color : green; font-weight: bold;}");
         user_label->setVisible(false);
@@ -429,7 +452,7 @@ QWidget* CameraViewer::createNavigationWidget() {
             navItems << "Error: Invalid Navigationtab format";
         }
         // Add the items to the QListWidget
-        listFiles->addItems(navItems);        
+        listFiles->addItems(navItems);              
         layout->addWidget(listFiles);        
         QPixmap pixmap_battery(QString::fromStdString(config.battery_file_full));
         QPixmap scaledPixmapBattery = pixmap_battery.scaled(
@@ -454,13 +477,20 @@ QWidget* CameraViewer::createContentWidget() {
         layout->setContentsMargins(0, 0, 0, 0);         
         layout->setSpacing(0); 
 
+        QHBoxLayout *Task_videoLayout = new QHBoxLayout();
         taskListWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         taskListWidget->setMaximumHeight(Sheight/5);
         taskListWidget->setFont([](int size) { QFont font; font.setPointSize(size); return font; }(config.font_size));           
         taskListWidget->setStyleSheet("QListWidget { color : green; font-weight: bold;}");
         taskListWidget->setWordWrap(true);
-        layout->addWidget(taskListWidget);
+        videoView2->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        videoView2->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);   
+        // videoView2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);            
+        videoView2->setFixedSize(320, 240);
+        Task_videoLayout->addWidget(taskListWidget);
+        Task_videoLayout->addWidget(videoView2);
         view->setMaximumHeight(Sheight*0.75);
+        layout->addLayout(Task_videoLayout);        
         layout->addWidget(view);        
         QPixmap pixmap_battery(QString::fromStdString(config.battery_file_full));
         QPixmap scaledPixmapBattery = pixmap_battery.scaled(
@@ -755,6 +785,9 @@ void CameraViewer::working_mode() {
 
             if (current_mode.find("offline") == std::string::npos || _status == 0) {
                 // Open the video stream using OpenCV and GStreamer
+                std::string _loopback = config._vl_loopback;
+                _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                cameraThread->update_camera_pipeline(_loopback);                            
                 int _cap = cameraThread->init();
                 if (_cap == -1) { 
                     image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -931,8 +964,8 @@ void CameraViewer::FSM(nlohmann::json _data, std::string _event) {
                 AudioReset();
                 // session.update_helmet_status(session.get_operator_status() + "_standby");
                 session.terminate_support();
-                streamend();
                 remoteend();
+                streamend();
                 close_audio_channel();
                 QPixmap pixmap_avatar(QString::fromStdString(config.avatar_file));
                 // QPixmap transformedPixmap_avatr = pixmap_avatar.transformed(transform);
@@ -1007,7 +1040,9 @@ void CameraViewer::FSM(nlohmann::json _data, std::string _event) {
 void CameraViewer::handle_update_frame(cv::Mat _frame) {
     try {
         // auto frame_start = std::chrono::high_resolution_clock::now();
-        if (!camera_rotate && config.rotate == 1) {
+        current_mode = session.get_helmet_status();
+        // LOG_INFO("current mode " + current_mode);
+        if (!camera_rotate && config.rotate == 1) {            
             std::string command = "i2cset -f -y 1 0x3C 0x38 0x20 0x47 i";
             FILE* pipe = popen(command.c_str(), "r");
             if (!pipe) {
@@ -1044,16 +1079,25 @@ void CameraViewer::handle_update_frame(cv::Mat _frame) {
         }
         auto frame_start = std::chrono::high_resolution_clock::now();
         pixmap = QPixmap::fromImage(image);//.scaled(videoLabel->size(), Qt::KeepAspectRatio,Qt::FastTransformation);
+        if (current_mode.find("Standalone") == std::string::npos) {
+            videoPixmapItem->setPixmap(pixmap);
+            videoScene->setSceneRect(videoPixmapItem->boundingRect());
+            videoView->fitInView(videoScene->sceneRect(), Qt::KeepAspectRatioByExpanding); 
+            videoView->centerOn(videoPixmapItem);
+            videoView->viewport()->update(); // Trigger redraw
+            auto capture_end = std::chrono::high_resolution_clock::now();
+            // Timing calculations
+            double capture_time = std::chrono::duration<double, std::milli>(
+                capture_end - frame_start).count();
+        }
+        else {
+            videoPixmapItem2->setPixmap(pixmap);
+            videoScene2->setSceneRect(videoPixmapItem2->boundingRect());
+            videoView2->fitInView(videoScene2->sceneRect(), Qt::KeepAspectRatioByExpanding); 
+            videoView2->centerOn(videoPixmapItem2);
+            videoView2->viewport()->update(); // Trigger redraw
+        }
 
-        videoPixmapItem->setPixmap(pixmap);
-        videoScene->setSceneRect(videoPixmapItem->boundingRect());
-        videoView->fitInView(videoScene->sceneRect(), Qt::KeepAspectRatioByExpanding); 
-        videoView->centerOn(videoPixmapItem);
-        videoView->viewport()->update(); // Trigger redraw
-        auto capture_end = std::chrono::high_resolution_clock::now();
-        // Timing calculations
-        double capture_time = std::chrono::duration<double, std::milli>(
-            capture_end - frame_start).count();
         // std::cout << "capture time: " << capture_time << std::endl;
         // LOG_INFO("capture_time " + std::to_string(capture_time));
         // if (!screenshot) {
@@ -1061,17 +1105,18 @@ void CameraViewer::handle_update_frame(cv::Mat _frame) {
         //     QPixmap pixmap1 = this->grab();
         //     // Option 2: Capture entire CameraViewer (uncomment to use)
         //     // QPixmap pixmap = this->grab();
-        //     pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");
+        //     pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");            
+        //     LOG_INFO("lastPixmapSize : " + std::to_string(lastPixmapSize.width()) + "x" + std::to_string(lastPixmapSize.height()));
         //     LOG_INFO("videoView size: " + std::to_string(videoView->size().width()) + "x" + std::to_string(videoView->size().height()));
         //     QRectF rect = videoScene->sceneRect();
         //     LOG_INFO("videoScene rect: (" + std::to_string(rect.x()) + ", " + std::to_string(rect.y()) + ", " +
         //             std::to_string(rect.width()) + ", " + std::to_string(rect.height()) + ")");
         //     LOG_INFO("pixmap size: " + std::to_string(pixmap.size().width()) + "x" + std::to_string(pixmap.size().height()));
-        //     LOG_INFO("Widget screenshot saved to /home/x_user/screenshot.png");
+        //     LOG_INFO("Widget screenshot saved to /home/x_user/my_camera_project/screenshot.png");
         // }
         } catch (const std::exception& e) {
-                    LOG_ERROR("An error occurred in CameraViewer handle_update_frame: " + std::string(e.what()));
-                }
+            LOG_ERROR("An error occurred in CameraViewer handle_update_frame: " + std::string(e.what()));
+        }
 }
 
 void CameraViewer::handle_update_video(cv::Mat _frame) {
@@ -1093,16 +1138,28 @@ void CameraViewer::handle_update_video(cv::Mat _frame) {
             painter.drawText(Swidth/2 -100, Sheight/2, QString::fromStdString(lang.getText("error_message", "NOFRAME")));
             painter.end();
         }
-        pixmap = QPixmap::fromImage(image);
-
-        videoPixmapItem1->setPixmap(pixmap);
+        pixmap1 = QPixmap::fromImage(image);
+        videoPixmapItem1->setPixmap(pixmap1);
         videoScene1->setSceneRect(videoPixmapItem1->boundingRect());
-        videoView1->fitInView(videoScene1->sceneRect(), Qt::KeepAspectRatioByExpanding); 
+        videoView1->fitInView(videoScene1->sceneRect(), Qt::IgnoreAspectRatio); 
         videoView1->centerOn(videoPixmapItem1);
-        videoView1->viewport()->update(); // Trigger redraw            
+        videoView1->viewport()->update(); // Trigger redraw    
+        if (!screenshot) {
+            screenshot = true;
+            QPixmap pixmap2 = this->grab();
+            // Option 2: Capture entire CameraViewer (uncomment to use)
+            // QPixmap pixmap = this->grab();
+            pixmap2.save("/home/x_user/my_camera_project/screenshot11.png", "PNG");            
+            LOG_INFO("videoView1 size: " + std::to_string(videoView1->size().width()) + "x" + std::to_string(videoView1->size().height()));
+            QRectF rect = videoScene1->sceneRect();
+            LOG_INFO("videoScene1 rect: (" + std::to_string(rect.x()) + ", " + std::to_string(rect.y()) + ", " +
+                    std::to_string(rect.width()) + ", " + std::to_string(rect.height()) + ")");
+            LOG_INFO("pixmap size: " + std::to_string(pixmap2.size().width()) + "x" + std::to_string(pixmap2.size().height()));
+            LOG_INFO("Widget screenshot saved to /home/x_user/my_camera_project/screenshot.png");
+        }        
         } catch (const std::exception& e) {
-                    LOG_ERROR("An error occurred in CameraViewer handle_update_video: " + std::string(e.what()));
-                }
+            LOG_ERROR("An error occurred in CameraViewer handle_update_video: " + std::string(e.what()));
+        }
 }
 
 void CameraViewer::button_pressed() {
@@ -1126,7 +1183,7 @@ void CameraViewer::report_and_reset_clicks() {
     try {
         btn_click = true;
         if (clicks !=0) {
-            LOG_INFO("Handling button clicks, current mode " + current_mode);
+            LOG_INFO("Handling button clicks " + std::to_string(clicks) + " current mode " + current_mode);
             if (current_mode == "Low_power" and clicks> 0)
                 Exit_Low_Power_Mode();
             else if (current_mode.find("standby") != std::string::npos) {                
@@ -1224,18 +1281,6 @@ void CameraViewer::report_and_reset_clicks() {
                     session.update_helmet_status(session.get_operator_status() + "_standby");
                     session.terminate_support();
                     current_mode = session.get_helmet_status();
-                    streamend();
-                    remoteend();
-                    close_audio_channel();
-                    QPixmap pixmap_avatar(QString::fromStdString(config.avatar_file));
-                    // QPixmap transformedPixmap_avatr = pixmap_avatar.transformed(transform);
-                    QPixmap scaledPixmapAvatr = pixmap_avatar.scaled(
-                        3*Swidth/20,
-                        Sheight/10,
-                        Qt::KeepAspectRatio,
-                        Qt::FastTransformation 
-                    );
-                    avatarLabel->setPixmap(scaledPixmapAvatr);
                     legend_label1->setText(QString::fromStdString(lang.getText("defaulttab","langs")));
                     legend_label2->setVisible(true);              
                     legend_label2->setText(QString::fromStdString(lang.getText("defaulttab","standalone")));
@@ -1277,8 +1322,8 @@ void CameraViewer::report_and_reset_clicks() {
                     session.update_helmet_status(session.get_operator_status() + "_standby");
                     session.terminate_support();
                     current_mode = session.get_helmet_status();
-                    streamend();
                     remoteend();
+                    streamend();
                     close_audio_channel();
                     QPixmap pixmap_avatar(QString::fromStdString(config.avatar_file));
                     QPixmap scaledPixmapAvatr = pixmap_avatar.scaled(
@@ -1374,6 +1419,9 @@ void CameraViewer::report_and_reset_clicks() {
                     }
                     else {
                         //Qrcode 
+                        std::string _loopback = config._vl_loopback;
+                        _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                        cameraThread->update_camera_pipeline(_loopback);
                         int _cap = cameraThread->init();
                         if (_cap == -1) { 
                             image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -1438,6 +1486,7 @@ void CameraViewer::report_and_reset_clicks() {
                         scenaraio = 5;
                     }
                     else if (clicks == 6) {
+                        cameraThread->releasecamera();    
                         if (pdf.getPageCount() > 2)
                             pdf.saveToFile(lang.getText("pdf_message","name")+getCurrentDateTime()+".pdf");
                         if (config.debug == 0) {
@@ -1451,7 +1500,10 @@ void CameraViewer::report_and_reset_clicks() {
                             _working_wifi = network.run();
                             working_mode();
                         }
-                        else {
+                        else {                           
+                            std::string _loopback = config._vl_loopback;
+                            _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                            cameraThread->update_camera_pipeline(_loopback);
                             int _cap = cameraThread->init();
                             if (_cap == -1) { 
                                 image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -1510,7 +1562,7 @@ void CameraViewer::report_and_reset_clicks() {
                         pdfFiles.clear();
                         txtFiles.clear();
                         mp4Files.clear();                        
-                        showdefaultstandalone();
+                        showdefaultstandalone();        
                     } 
                 }
                 else if (scenaraio == 3) {
@@ -1596,6 +1648,7 @@ void CameraViewer::report_and_reset_clicks() {
                         document = nullptr;
                         pdfFiles.clear();
                         showFilesList(config.todo,".pdf");
+                        cameraThread->stopCapturing();
                     }                
                 }
                 else if (scenaraio == 22) {
@@ -1611,6 +1664,7 @@ void CameraViewer::report_and_reset_clicks() {
                         scene->clear();
                         txtFiles.clear();
                         showFilesList(config.todo,".txt");
+                        cameraThread->stopCapturing();
                     } 
                 }
                 else if (scenaraio == 222) {
@@ -1650,6 +1704,7 @@ void CameraViewer::report_and_reset_clicks() {
                         scene->clear();
                         document = nullptr;
                         showFilesList(config.todo,".txt");
+                        cameraThread->stopCapturing();
                     }                
                 }
                 else if (scenaraio == 33) {
@@ -1693,7 +1748,7 @@ void CameraViewer::report_and_reset_clicks() {
                     else if (clicks == 7) {
                         if (!videoThread->getStop()) {
                             videoThread->stopPlaying();   // Stops the timer
-                            videoThread->releasecamera(); // Releases capture
+                            videoThread->releasevideo(); // Releases capture
                         }
                         // Wait for video thread to fully stop (optional, if needed)
                         while (!videoThread->getStop()) {
@@ -1739,6 +1794,9 @@ void CameraViewer::report_and_reset_clicks() {
                     }
                 }
                 else if (clicks == 3) {
+                    std::string _loopback = config._vl_loopback;
+                    _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                    cameraThread->update_camera_pipeline(_loopback);
                     int _cap = cameraThread->init();
                     if (_cap == -1) { 
                         image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -1787,6 +1845,9 @@ void CameraViewer::report_and_reset_clicks() {
                     working_mode();
                 }
                 else {
+                    std::string _loopback = config._vl_loopback;
+                    _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                    cameraThread->update_camera_pipeline(_loopback);
                     int _cap = cameraThread->init();
                     if (_cap == -1) { 
                         image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -1889,22 +1950,43 @@ void CameraViewer::complete_standalone_transition(bool _NOWIFI) {
                         floatingMessage->timer_stop();
                         floatingMessage->showMessage(QString::fromStdString(lang.getText("standalonetab","download")), 1);
                         A_control.setCaptureInputType("ADC");
-                        A_control.setCaptureInputVolume(25);
-                        A_control.setDigitalPlaybackVolume(90);
+                        A_control.setCaptureInputVolume(30);
+                        A_control.setDigitalPlaybackVolume(95);
                         A_control.setLineOutputVolume(60);
-                        A_control.setDigitalCaptureVolume(70);
+                        A_control.setDigitalCaptureVolume(115);
                         standalone_language_transition = false;
                         LOG_INFO("current mode " + current_mode);
+                        cameraThread->update_camera_pipeline(config._vl_loopback_small);
+                        int _cap = cameraThread->init();
+                        if (_cap == -1) { 
+                            image = QImage(320, 240, QImage::Format_RGB888);
+                            image.fill(Qt::black);  // Fill the image with black
+                            QPainter painter(&image);
+                            painter.setRenderHint(QPainter::Antialiasing);
+                            painter.setPen(QColor(Qt::green));
+                            QFont font("Arial", 10);
+                            painter.setFont(font);
+                            painter.drawText(5, 80, QString::fromStdString(lang.getText("error_message", "NOCAMERA")));
+                            painter.end();
+                            pixmap = QPixmap::fromImage(image);
+                            videoPixmapItem2->setPixmap(pixmap);
+                            videoScene2->setSceneRect(videoPixmapItem2->boundingRect());
+                            videoView2->fitInView(videoScene2->sceneRect(), Qt::KeepAspectRatioByExpanding); 
+                            videoView2->centerOn(videoPixmapItem2);
+                            videoView2->viewport()->update();  
+                            return;
+                        }  
+                        camera_rotate = false;
                     }, Qt::QueuedConnection);
                 });
             }
             else {
                 floatingMessage->showMessage(QString::fromStdString(lang.getText("error_message","NOFILES")), 2);
                 A_control.setCaptureInputType("ADC");
-                A_control.setCaptureInputVolume(25);
-                A_control.setDigitalPlaybackVolume(90);
+                A_control.setCaptureInputVolume(30);
+                A_control.setDigitalPlaybackVolume(95);
                 A_control.setLineOutputVolume(60);
-                A_control.setDigitalCaptureVolume(70);
+                A_control.setDigitalCaptureVolume(115);
                 standalone_language_transition = false;
                 showdefaultstandalone(false);
             }
@@ -2005,7 +2087,8 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         stackedWidget->setCurrentIndex(4);
                         scenaraio = 5;
                     }
-                    else if (_command == lang.getText("standalonetab","close")) {            
+                    else if (_command == lang.getText("standalonetab","close")) {       
+                        cameraThread->releasecamera();         
                         if (pdf.getPageCount() > 2)
                             pdf.saveToFile(lang.getText("pdf_message","name")+getCurrentDateTime()+".pdf");
                         if (config.debug == 0) {
@@ -2020,6 +2103,9 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                             working_mode();
                         }                               
                         else {
+                            std::string _loopback = config._vl_loopback;
+                            _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                            cameraThread->update_camera_pipeline(_loopback);
                             int _cap = cameraThread->init();
                             if (_cap == -1) { 
                                 image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -2228,6 +2314,12 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         scrollLeft();
                     else if (_command == lang.getText("standalonetab","right"))
                         scrollRight();
+                    else if (_command == lang.getText("standalonetab","snapshot")) {
+                        if (cameraThread->takeSnapshot(config.snapshot_file)) {
+                            pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
+                            pdf.addText("------------------------------------------------");
+                        }
+                    }
                     else if (_command == lang.getText("standalonetab","quit")) {
                         scenaraio = 1;
                         currentPage = 0;
@@ -2235,7 +2327,8 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         scene->clear();
                         document = nullptr;
                         pdfFiles.clear();
-                        showFilesList(config.todo,".pdf");
+                        showFilesList(config.todo,".pdf");                        
+                        cameraThread->stopCapturing();
                     }                    
                     else if (_command == lang.getText("standalonetab","help")) {
                         QMetaObject::invokeMethod(helptimer, "start", Qt::QueuedConnection, Q_ARG(int, 5000));
@@ -2249,12 +2342,19 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                     else if (_command == lang.getText("standalonetab","previous")) {
                         prevTask();
                     }
+                    else if (_command == lang.getText("standalonetab","snapshot")) {
+                        if (cameraThread->takeSnapshot(config.snapshot_file)) {
+                            pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
+                            pdf.addText("------------------------------------------------");
+                        }
+                    }
                     else if (_command == lang.getText("standalonetab","quit")) {
                         scenaraio = 2;
                         currentTaskIndex = 0;
                         scene->clear();
                         txtFiles.clear();
                         showFilesList(config.todo,".txt");
+                        cameraThread->stopCapturing();
                     } 
                     else if (_command == lang.getText("standalonetab","help")) {
                         QMetaObject::invokeMethod(helptimer, "start", Qt::QueuedConnection, Q_ARG(int, 5000));
@@ -2288,6 +2388,12 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                     else if (_command == lang.getText("standalonetab","right")) {
                         scrollRight();
                     }
+                    else if (_command == lang.getText("standalonetab","snapshot")) {
+                        if (cameraThread->takeSnapshot(config.snapshot_file)) {
+                            pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
+                            pdf.addText("------------------------------------------------");
+                        }
+                    }
                     else if (_command == lang.getText("standalonetab","quit")) {
                         scenaraio = 2;
                         currentPage = 0;
@@ -2298,6 +2404,7 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         scene->clear();
                         document = nullptr;
                         showFilesList(config.todo,".txt");
+                        cameraThread->stopCapturing();
                     }       
                     else if (_command == lang.getText("standalonetab","help")) {
                         QMetaObject::invokeMethod(helptimer, "start", Qt::QueuedConnection, Q_ARG(int, 5000));
@@ -2355,7 +2462,7 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                     else if (_command == lang.getText("standalonetab","quit")) {
                         if (!videoThread->getStop()) {
                             videoThread->stopPlaying();   // Stops the timer
-                            videoThread->releasecamera(); // Releases capture
+                            videoThread->releasevideo(); // Releases capture
                         }
                         // Wait for video thread to fully stop (optional, if needed)
                         while (!videoThread->getStop()) {
@@ -2384,6 +2491,9 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         working_mode();
                     }
                     else {
+                        std::string _loopback = config._vl_loopback;
+                        _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                        cameraThread->update_camera_pipeline(_loopback);
                         int _cap = cameraThread->init();
                         if (_cap == -1) { 
                             image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -2407,7 +2517,7 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                             session.update_helmet_status("nocamera");
                             current_mode = "nocamera";
                             return;
-                        }    
+                        }
                         camera_rotate = false;
                         cameraThread->startCapturing(config.period);
                         session.update_helmet_status(session.get_operator_status() + "_standby");
@@ -2416,7 +2526,7 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         stackedWidget->setCurrentIndex(0);    
                     }
                 }
-            }            
+            }
             else {
                 if (_command == lang.getText("defaulttab","langs_command")) {
                     if (current_mode.find("request") == std::string::npos || current_mode.find("qrcode") == std::string::npos) {
@@ -2497,6 +2607,9 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         current_mode = "qrcode";                    
                     }
                     else if (current_mode.find("offline") != std::string::npos) {
+                        std::string _loopback = config._vl_loopback;
+                        _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                        cameraThread->update_camera_pipeline(_loopback);
                         int _cap = cameraThread->init();
                         if (_cap == -1) { 
                             image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -2527,17 +2640,6 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         session.update_helmet_status(session.get_operator_status() + "_standby");
                         session.terminate_support();
                         current_mode = session.get_helmet_status();
-                        streamend();
-                        remoteend();
-                        close_audio_channel();
-                        QPixmap pixmap_avatar(QString::fromStdString(config.avatar_file));
-                        QPixmap scaledPixmapAvatr = pixmap_avatar.scaled(
-                            3*Swidth/20,
-                            Sheight/10,
-                            Qt::KeepAspectRatio,
-                            Qt::FastTransformation 
-                        );
-                        avatarLabel->setPixmap(scaledPixmapAvatr);
                         legend_label1->setText(QString::fromStdString(lang.getText("defaulttab","langs")));
                         legend_label2->setVisible(true);              
                         legend_label2->setText(QString::fromStdString(lang.getText("defaulttab","standalone")));
@@ -2555,7 +2657,6 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                         user_label->clear();
                     }
                 }
-
                 else if (_command == lang.getText("defaulttab","exit_command")) {
                     if (current_mode.find("qrcode") != std::string::npos) {
                         //Qrcode
@@ -2604,6 +2705,9 @@ void CameraViewer::handle_command_recognize(std::string _command) {
                 }
                 else if (_command == lang.getText("defaulttab","camera_command")) {
                     if (current_mode.find("nocamera") != std::string::npos) {
+                        std::string _loopback = config._vl_loopback;
+                        _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+                        cameraThread->update_camera_pipeline(_loopback);
                         int _cap = cameraThread->init();
                         if (_cap == -1) { 
                             image = QImage(Swidth, Sheight, QImage::Format_RGB888);
@@ -2670,9 +2774,9 @@ void CameraViewer::AudioReset() {
     try {
         A_control.setVolumeLevel(55);
         A_control.setLineOutputVolume(60);
-        A_control.setCaptureInputVolume(25);
-        A_control.setDigitalPlaybackVolume(90);
-        A_control.setDigitalCaptureVolume(70);
+        A_control.setCaptureInputVolume(30);
+        A_control.setDigitalPlaybackVolume(95);
+        A_control.setDigitalCaptureVolume(115);
         // A_control.setDigitalPlaybackBoostVolume(0);
         // A_control.setDigitalSidetoneVolume(0);
         A_control.setCaptureInputType("ADC");
@@ -3015,16 +3119,23 @@ void CameraViewer::process_event(nlohmann::json _data) {
                 }
                 values[index] = std::stoi(setting); 
                 bool areEqual = true;
+                if (values[2] == 1280)
+                    values[2] = 1024;
+                if (values[3] == 720)
+                    values[3] = 768;
                 // Compare each element
-                for (int i = 0; i < 4; ++i) {
+                for (int i = 0; i < 4; ++i) {                    
                     if (old_values[i] != values[i]) {
                         areEqual = false; // Set to false if any element differs
                         break; // Exit the loop early
-                    }
+                    }                    
                 }
+                memcpy(old_values, values, sizeof(old_values));
                 if (!areEqual) {
+                    std::cout << "!areEqual : " << std::endl;
                     config.updatestreaming(values[0], values[1], values[2], values[3]);
                     streamend();
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
                     streamstart(_ipstream);                
                 }
             }
@@ -3056,7 +3167,7 @@ void CameraViewer::remoteend() {
     try {
         LOG_INFO("[GST] STOP REMOTING START");
         cameraThread->stopremote();    
-        LOG_INFO("[GST] STOP REMOTING START");
+        LOG_INFO("[GST] STOP REMOTING END");
     } catch (const std::exception& e) {
         LOG_ERROR("An error occurred in CameraViewer remoteend: " + std::string(e.what()));
     }
@@ -3064,12 +3175,46 @@ void CameraViewer::remoteend() {
 
 void CameraViewer::streamstart(std::string _data) { 
     try {   
-        LOG_INFO("[GST] START STREAMING START");     
+        LOG_INFO("[GST] START STREAMING START");  
+        cameraThread->stopCapturing();
+        cameraThread->releasecamera();    
+        std::string _loopback = config._vl_loopback;
+        _loopback = config.replacePlaceholder(_loopback, "$FPS", "30");
+        cameraThread->update_camera_pipeline(_loopback);  
+        cameraThread->stopCapturing();
+        cameraThread->releasecamera();  
+        int _cap = cameraThread->init();
+        if (_cap == -1) { 
+            image = QImage(Swidth, Sheight, QImage::Format_RGB888);
+            image.fill(Qt::black);  // Fill the image with black
+            QPainter painter(&image);
+            painter.setRenderHint(QPainter::Antialiasing);
+            painter.setPen(QColor(Qt::green));
+            QFont font("Arial", 30);
+            painter.setFont(font);
+            painter.drawText(Swidth/2 -100, Sheight/2, QString::fromStdString(lang.getText("error_message", "NOCAMERA")));
+            painter.end();
+            pixmap = QPixmap::fromImage(image);
+            videoPixmapItem->setPixmap(pixmap);
+            videoScene->setSceneRect(videoPixmapItem->boundingRect());
+            videoView->fitInView(videoScene->sceneRect(), Qt::KeepAspectRatioByExpanding); 
+            videoView->centerOn(videoPixmapItem);
+            videoView->viewport()->update();  
+            legend_label3->setText(QString::fromStdString(lang.getText("defaulttab","camera")));
+            status_label->setVisible(false);           
+            session.stop_notify();  
+            session.update_helmet_status("nocamera");
+            current_mode = "nocamera";
+            return;
+        }          
+        camera_rotate = false;
+        cameraThread->startCapturing(33);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         std::string _stream = config._vs_streaming;          
         _stream = config.replacePlaceholder(_stream, "$VPN_ADDR", _data);
         _stream = config.replacePlaceholder(_stream, "$server_port", std::to_string(config.server_port));
-        int fps = (int) (1000 / config.speriod);
-        int b_stream = cameraThread->startstream(_stream, fps, config.swidth, config.sheight);
+        // std::cout << "_stream : " << _stream  << std::endl;
+        int b_stream = cameraThread->startstream(_stream, config.speriod, config.swidth, config.sheight);
         if (b_stream == -1) {
             LOG_ERROR("Error: Could not open the streaming pipline.");
             return;
@@ -3083,6 +3228,40 @@ void CameraViewer::streamstart(std::string _data) {
 void CameraViewer::streamend() {
     try {
         LOG_INFO("[GST] STOP STREAMING START");
+        cameraThread->stopCapturing();
+        cameraThread->releasecamera();    
+        std::string _loopback = config._vl_loopback;
+        _loopback = config.replacePlaceholder(_loopback, "$FPS", "15");
+        cameraThread->update_camera_pipeline(_loopback);  
+        cameraThread->stopCapturing();
+        cameraThread->releasecamera();  
+        int _cap = cameraThread->init();
+        if (_cap == -1) { 
+            image = QImage(Swidth, Sheight, QImage::Format_RGB888);
+            image.fill(Qt::black);  // Fill the image with black
+            QPainter painter(&image);
+            painter.setRenderHint(QPainter::Antialiasing);
+            painter.setPen(QColor(Qt::green));
+            QFont font("Arial", 30);
+            painter.setFont(font);
+            painter.drawText(Swidth/2 -100, Sheight/2, QString::fromStdString(lang.getText("error_message", "NOCAMERA")));
+            painter.end();
+            pixmap = QPixmap::fromImage(image);
+            videoPixmapItem->setPixmap(pixmap);
+            videoScene->setSceneRect(videoPixmapItem->boundingRect());
+            videoView->fitInView(videoScene->sceneRect(), Qt::KeepAspectRatioByExpanding); 
+            videoView->centerOn(videoPixmapItem);
+            videoView->viewport()->update();  
+            legend_label3->setText(QString::fromStdString(lang.getText("defaulttab","camera")));
+            status_label->setVisible(false);           
+            session.stop_notify();  
+            session.update_helmet_status("nocamera");
+            current_mode = "nocamera";
+            return;
+        }  
+        camera_rotate = false;
+        cameraThread->startCapturing(config.period);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         cameraThread->stopstream();   
         LOG_INFO("[GST] STOP STREAMING END");
     } catch (const std::exception& e) {
@@ -3092,7 +3271,7 @@ void CameraViewer::streamend() {
 
 void CameraViewer::showdefaultstandalone(bool _standalone) {
     try {        
-        if(_standalone){
+        if(_standalone) {
             pdf.addText(lang.getText("pdf_message","first_page") + getCurrentDateTime());
             stackedWidget->setCurrentIndex(1);
             listFiles->clear();
@@ -3124,7 +3303,8 @@ void CameraViewer::showdefaultstandalone(bool _standalone) {
             pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");
             pdf.addImage("/home/x_user/my_camera_project/screenshot.png");
             pdf.addText("------------------------------------------------");
-            if (cameraThread->takeSnapshotGst(config.snapshot_pipeline)) {
+            // if (cameraThread->takeSnapshotGst(config.snapshot_pipeline))
+            if (cameraThread->takeSnapshot(config.snapshot_file)) {
                 pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
                 pdf.addText("------------------------------------------------");
             }
@@ -3227,7 +3407,8 @@ void CameraViewer::showFilesList(const std::string &folder_path, const std::stri
         pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");
         pdf.addImage("/home/x_user/my_camera_project/screenshot.png");
         pdf.addText("------------------------------------------------");
-        if (cameraThread->takeSnapshotGst(config.snapshot_pipeline)) {
+        // if (cameraThread->takeSnapshotGst(config.snapshot_pipeline))
+        if (cameraThread->takeSnapshot(config.snapshot_file)) {
             pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
             pdf.addText("------------------------------------------------");
         }
@@ -3253,7 +3434,8 @@ void CameraViewer::LoadPDF(const std::string &full_path) {
                 showFilesList(config.todo,".txt");
             }
             return;
-        }
+        }        
+        cameraThread->startCapturing(config.period);
         pdf.addText(lang.getText("pdf_message","pdf") + filename + " - " + getCurrentDateTime());
         stackedWidget->setCurrentIndex(2);
         document->setRenderHint(Poppler::Document::Antialiasing);
@@ -3272,7 +3454,7 @@ void CameraViewer::LoadMP4(const std::string &full_path) {
         LOG_INFO("Loading MP4 file: " + filename);
         if (!videoThread->getStop()) {
             videoThread->stopPlaying();
-            videoThread->releasecamera();
+            videoThread->releasevideo();
         }
         videoScene1->clear();
         // Ensure videoPixmapItem1 is null since the scene was cleared
@@ -3316,7 +3498,8 @@ void CameraViewer::LoadMP4(const std::string &full_path) {
             pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");
             pdf.addImage("/home/x_user/my_camera_project/screenshot.png");
             pdf.addText("------------------------------------------------");            
-            if (cameraThread->takeSnapshotGst(config.snapshot_pipeline)) {
+            // if (cameraThread->takeSnapshotGst(config.snapshot_pipeline))
+            if (cameraThread->takeSnapshot(config.snapshot_file)) {
                 pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
                 pdf.addText("------------------------------------------------");
             }
@@ -3411,7 +3594,8 @@ void CameraViewer::displayTasks() {
         pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");
         pdf.addImage("/home/x_user/my_camera_project/screenshot.png");
         pdf.addText("------------------------------------------------");        
-        if (cameraThread->takeSnapshotGst(config.snapshot_pipeline)) {
+        // if (cameraThread->takeSnapshotGst(config.snapshot_pipeline))
+        if (cameraThread->takeSnapshot(config.snapshot_file)) {
             pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
             pdf.addText("------------------------------------------------");
         }
@@ -3482,7 +3666,8 @@ void CameraViewer::showPage(int page_num) {
         pixmap1.save("/home/x_user/my_camera_project/screenshot.png", "PNG");
         pdf.addImage("/home/x_user/my_camera_project/screenshot.png");
         pdf.addText("------------------------------------------------");
-        if (cameraThread->takeSnapshotGst(config.snapshot_pipeline)) {
+        // if (cameraThread->takeSnapshotGst(config.snapshot_pipeline))
+        if (cameraThread->takeSnapshot(config.snapshot_file)) {
             pdf.addImage("/home/x_user/my_camera_project/snapshot.png");
             pdf.addText("------------------------------------------------");
         }
@@ -3894,7 +4079,7 @@ void CameraViewer::batteryiconchange(PowerManagement::BatteryStatus status) {
             case PowerManagement::BatteryStatus::GREEN:
                 if (battery_status != status) {
                     battery_status = status;
-                    battery_name = QString::fromStdString(config.battery_file_full);
+                    battery_name = QString::fromStdString(config.battery_file_full);                    
                     floatingMessage->timer_stop();
                 }
                 // LOG_INFO("GREEN");
@@ -3910,9 +4095,9 @@ void CameraViewer::batteryiconchange(PowerManagement::BatteryStatus status) {
             case PowerManagement::BatteryStatus::RED:
                 if (battery_status != status) {
                     battery_status = status;
-                    battery_name = QString::fromStdString(config.battery_file_low);
+                    battery_name = QString::fromStdString(config.battery_file_low); 
                     floatingMessage->timer_stop();
-                }
+                }      
                 // LOG_INFO("RED");          
                 break;
             case PowerManagement::BatteryStatus::CRITICAL:

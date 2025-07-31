@@ -141,7 +141,7 @@ public:
                 throw std::runtime_error("Failed to create GStreamer pipeline");
             } else {
                 LOG_INFO("Pipeline created successfully");
-            }
+            }                      
             // Create bus to get events from GStreamer pipeline
             bus = gst_element_get_bus(pipeline);
             gst_bus_add_signal_watch(bus);
@@ -194,7 +194,7 @@ public:
 private:
     GstElement *pipeline;
     GstBus *bus;
-    std::string audio_incoming_pipeline;
+    std::string audio_incoming_pipeline;    
     bool _init = false;
 
     static void on_eos([[maybe_unused]] GstBus *bus, [[maybe_unused]] GstMessage *msg, gpointer user_data) {
@@ -536,9 +536,9 @@ public:
                         size_t end = line.find("[") - 1;
                     if (start != std::string::npos && end != std::string::npos) {
                         return std::stoi(line.substr(start, end - start));
+                        }
                     }
                 }
-            }
             }
             return -1;
         } catch (const std::exception& e) {

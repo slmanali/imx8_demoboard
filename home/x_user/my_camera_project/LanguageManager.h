@@ -33,7 +33,7 @@ public:
             }
             
             setLanguage(default_language);
-        LOG_INFO("LanguageManager Constructor");
+            LOG_INFO("LanguageManager Constructor");
         } catch (const json::exception& e) {
             LOG_ERROR("JSON parsing error: " + std::string(e.what()));
             throw std::runtime_error("JSON parsing error");

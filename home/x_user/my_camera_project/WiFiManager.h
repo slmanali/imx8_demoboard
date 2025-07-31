@@ -47,7 +47,7 @@ public:
         : wireless_interface(wireless_interface), current_network(""), current_hostname(""), force_connection(false), 
           _connected(false), _http_ok(false), _vpn_ok(false), vpn_process(-1), config(_config), session(_session) {
             LOG_INFO("WiFiManager Constructor");
-          }
+        }
 
     void init() {
         connections.clear();
@@ -446,7 +446,7 @@ public:
         } catch (const std::exception& e) {
             LOG_ERROR("[WIFI] Error while enabling wifi: " + std::string(e.what()));
         }
-    }
+    }    
 
     int check_wifi(const int _max_attempts = 30) {
         try {
@@ -460,13 +460,13 @@ public:
                     return 0;
                 }                    
                 else if (Wconnected == 1)  {         
-                LOG_INFO("WIFI NOT Connected.");
-                return 1;
-            }
-            else if (Wconnected == 2)  {         
-                LOG_INFO("WIFI UNAVAILABLE.");
-                return 2;
-            }
+                    LOG_INFO("WIFI NOT Connected.");
+                    return 1;
+                }
+                else if (Wconnected == 2)  {         
+                    LOG_INFO("WIFI UNAVAILABLE.");
+                    return 2;
+                }
                 else if (Wconnected == 3)  {         
                     LOG_INFO("WIFI connecting (configuring).");
                     attempts -= 1;
@@ -514,19 +514,19 @@ private:
                 if (state == "connected") {
                     return 0;
                 }
-                else if (state == "disconnected"){
+                else if (state == "disconnected") {
                     return 1;
                 }
-                else if (state == "unavailable"){
+                else if (state == "unavailable") {
                     return 2;
-                }                
+                }
                 else if (state == "connecting"){
                     return 3;
                 }
                 else if (state == "configuring"){
                     return 3;
+                }
             }
-        }
         }
         return 2;
     }

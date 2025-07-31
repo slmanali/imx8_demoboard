@@ -139,7 +139,7 @@ public:
 
             // Output the line
             HPDF_Page_TextOut(m_currentPage, 50, m_currentY, line.c_str());
-        m_currentY -= m_lineSpacing;
+            m_currentY -= m_lineSpacing;
             m_lineCount++;
         }
     }
